@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-primary-deep px-6 text-center text-primary-foreground">
-      <img src={LOGO_URL} alt="Nine3 Designs" className="h-20" />
+      <img src={LOGO_URL} alt="Nine3 Designs" className="h-28" />
       <p className="mt-8 font-script text-2xl font-semibold tracking-wide uppercase text-primary-soft">Welcome</p>
       <p className="mt-4 max-w-md text-sm font-light tracking-wide text-primary-foreground/80">
         Your space for projects, proofs, deliverables and invoices with Nine3 Designs.

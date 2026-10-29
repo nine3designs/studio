@@ -48,7 +48,7 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen md:grid-cols-2">
       <div className="hidden flex-col justify-between bg-primary-deep p-12 md:flex">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="h-12 self-start" />
+        <img src={LOGO_URL} alt="Nine3 Designs" className="h-16 self-start" />
         <p className="font-script text-3xl font-semibold tracking-wide uppercase text-primary-soft">Studio</p>
       </div>
       <div className="flex items-center justify-center p-8">

@@ -45,7 +45,7 @@ function EmailPortal() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-primary-deep p-6 text-primary-foreground">
-      <img src={LOGO_URL} alt="Nine3 Designs" className="h-14" />
+      <img src={LOGO_URL} alt="Nine3 Designs" className="h-20" />
       <p className="mt-6 text-xs font-semibold uppercase tracking-[0.3em] text-gold">Client portal</p>
       <form className="mt-8 w-full max-w-sm space-y-4 rounded-md bg-card p-6 text-card-foreground" onSubmit={async (e) => {
         e.preventDefault();

@@ -34,7 +34,7 @@ function Shell({ children, name }: { children: ReactNode; name?: string }) {
     <div className="min-h-screen bg-background">
       <header className="bg-primary-deep text-primary-foreground">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-6">
-          <img src={LOGO_URL} alt="Nine3 Designs" className="h-10" />
+          <img src={LOGO_URL} alt="Nine3 Designs" className="h-14" />
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold">Client portal</p>
         </div>
         {name && <div className="mx-auto max-w-5xl px-6 pb-8"><p className="text-sm opacity-70">Welcome,</p><h1 className="font-heading text-3xl font-semibold">{name}</h1></div>}

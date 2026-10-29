@@ -33,7 +33,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col md:flex-row">
       <aside className="no-print bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0">
         <div className="flex items-center justify-between p-6 md:block">
-          <img src={LOGO_URL} alt="Nine3 Designs" className="h-10" />
+          <img src={LOGO_URL} alt="Nine3 Designs" className="h-14" />
           <p className="font-script text-xs font-semibold uppercase tracking-[0.3em] text-sidebar-primary md:mt-3">Studio</p>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:overflow-visible">
