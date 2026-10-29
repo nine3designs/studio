@@ -23,18 +23,43 @@ export function PortalView({ token }: { token: string | null }) {
   if (q.error) return <Shell><Empty>{(q.error as Error).message}</Empty></Shell>;
   const p = q.data!;
   return (
-    <Shell name={p.client.company || p.client.name}>
+    <Shell name={p.client.company || p.client.name} theme={p.client.portal_type === "sports" ? teamTheme(p.client) : undefined}>
       {p.client.portal_type === "sports" ? <SportsPortal p={p} token={token} /> : <StandardPortal p={p} token={token} />}
     </Shell>
   );
 }
 
-function Shell({ children, name }: { children: ReactNode; name?: string }) {
+function teamTheme(client: Any): Record<string, string> {
+  const k = client.home_kit || {};
+  const p: string = k.primary || "#0E55AF";
+  const s: string = k.secondary || "#FFD520";
+  const hex = (p || "").replace("#", "");
+  const n = hex.length === 3 ? hex.split("").map((ch) => ch + ch).join("") : hex.padEnd(6, "0").slice(0, 6);
+  const r = parseInt(n.slice(0, 2), 16), g = parseInt(n.slice(2, 4), 16), b = parseInt(n.slice(4, 6), 16);
+  const light = (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.62;
+  const fg = light ? "#1A1A1A" : "#FFFFFF";
+  return {
+    "--primary": p,
+    "--primary-deep": p,
+    "--primary-soft": s,
+    "--primary-foreground": fg,
+    "--gold": s,
+    "--gold-soft": s,
+    "--gold-foreground": light ? "#1A1A1A" : p,
+    "--accent": s,
+    "--accent-foreground": light ? "#1A1A1A" : p,
+    "--ring": s,
+    "--chart-1": p,
+    "--chart-2": s,
+  };
+}
+
+function Shell({ children, name, theme }: { children: ReactNode; name?: string; theme?: Record<string, string> }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={theme as Any}>
       <header className="bg-primary-deep text-primary-foreground">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-6">
-          <img src={LOGO_URL} alt="Nine3 Designs" className="h-14" />
+          <img src={LOGO_URL} alt="Nine3 Designs" className="h-10" />
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold">Client portal</p>
         </div>
         {name && <div className="mx-auto max-w-5xl px-6 pb-8"><p className="text-sm opacity-70">Welcome,</p><h1 className="font-heading text-3xl font-semibold">{name}</h1></div>}
