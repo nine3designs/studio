@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Download, FileText, Upload } from "lucide-react";
+import { Check, ChevronDown, Download, FileText, Menu, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,44 +23,44 @@ export function PortalView({ token }: { token: string | null }) {
   if (q.error) return <Shell><Empty>{(q.error as Error).message}</Empty></Shell>;
   const p = q.data!;
   return (
-    <Shell name={p.client.company || p.client.name} theme={p.client.portal_type === "sports" ? teamTheme(p.client) : undefined}>
+    <Shell name={p.client.company || p.client.name}>
       {p.client.portal_type === "sports" ? <SportsPortal p={p} token={token} /> : <StandardPortal p={p} token={token} />}
     </Shell>
   );
 }
 
-function teamTheme(client: Any): Record<string, string> {
-  const k = client.home_kit || {};
-  const p: string = k.primary || "#0E55AF";
-  const s: string = k.secondary || "#FFD520";
-  const hex = (p || "").replace("#", "");
-  const n = hex.length === 3 ? hex.split("").map((ch) => ch + ch).join("") : hex.padEnd(6, "0").slice(0, 6);
-  const r = parseInt(n.slice(0, 2), 16), g = parseInt(n.slice(2, 4), 16), b = parseInt(n.slice(4, 6), 16);
-  const light = (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.62;
-  const fg = light ? "#1A1A1A" : "#FFFFFF";
-  return {
-    "--primary": p,
-    "--primary-deep": p,
-    "--primary-soft": s,
-    "--primary-foreground": fg,
-    "--gold": s,
-    "--gold-soft": s,
-    "--gold-foreground": light ? "#1A1A1A" : p,
-    "--accent": s,
-    "--accent-foreground": light ? "#1A1A1A" : p,
-    "--ring": s,
-    "--chart-1": p,
-    "--chart-2": s,
+function MobileTabs({ tabs }: { tabs: { v: string; l: string }[] }) {
+  const [open, setOpen] = useState(false);
+  const pick = (v: string) => {
+    const el = document.querySelector<HTMLButtonElement>(`[role="tab"][value="${v}"], [data-value="${v}"]`);
+    if (el) el.click();
+    setOpen(false);
   };
+  return (
+    <div className="mb-6 md:hidden">
+      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center justify-between rounded-md border bg-card px-4 py-3 text-sm font-medium">
+        <span>Menu</span>
+        {open ? <ChevronDown className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+      </button>
+      {open && (
+        <div className="mt-2 space-y-1 rounded-md border bg-card p-2">
+          {tabs.map((t) => (
+            <button key={t.v} type="button" onClick={() => pick(t.v)} className="block w-full rounded px-3 py-2 text-left text-sm hover:bg-accent">
+              {t.l}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
-function Shell({ children, name, theme }: { children: ReactNode; name?: string; theme?: Record<string, string> }) {
+function Shell({ children, name }: { children: ReactNode; name?: string }) {
   return (
-    <div className="min-h-screen bg-background" style={theme as Any}>
+    <div className="min-h-screen bg-background">
       <header className="bg-primary-deep text-primary-foreground">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-6">
-          <img src={LOGO_URL} alt="Nine3 Designs" className="h-10" />
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold">Client portal</p>
+          <img src={LOGO_URL} alt="Nine3 Designs" className="h-16 md:h-20" />
         </div>
         {name && <div className="mx-auto max-w-5xl px-6 pb-8"><p className="text-sm opacity-70">Welcome,</p><h1 className="font-heading text-3xl font-semibold">{name}</h1></div>}
       </header>
@@ -92,7 +92,14 @@ function StandardPortal({ p, token }: { p: Any; token: string | null }) {
   const pending = proofs.filter((d: Any) => d.status === "pending").length;
   return (
     <Tabs defaultValue="overview">
-      <TabsList className="mb-6 flex-wrap">
+      <MobileTabs tabs={[
+        { v: "overview", l: "Overview" },
+        { v: "proofs", l: `Proofs${pending ? ` (${pending})` : ""}` },
+        { v: "files", l: "Files" },
+        { v: "invoices", l: "Invoices" },
+        { v: "documents", l: "Proposals & contracts" },
+      ]} />
+      <TabsList className="mb-6 hidden flex-wrap md:flex">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="proofs">Proofs{pending ? ` (${pending})` : ""}</TabsTrigger>
         <TabsTrigger value="files">Files</TabsTrigger>
@@ -287,11 +294,34 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const months = monthlyPayments(p.invoices);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Raleway', ui-sans-serif, sans-serif" } as Any}>
       <div className="grid gap-6 md:grid-cols-2">
         <Kit label="Home kit" k={p.client.home_kit} />
         <Kit label="Away kit" k={p.client.away_kit} />
       </div>
+
+      {(p.tasks ?? []).length > 0 && (
+        <Section title="Graphics to-do list">
+          <ul className="space-y-2">
+            {p.tasks.map((tk: Any) => (
+              <li key={tk.id} className="flex items-start gap-3 rounded-md border bg-card p-4">
+                <Check className={`mt-0.5 h-4 w-4 ${tk.status === "done" ? "text-success" : "text-muted-foreground/30"}`} />
+                <div className="min-w-0">
+                  <p className="font-medium">{tk.title}</p>
+                  {tk.notes && <p className="text-sm text-muted-foreground">{tk.notes}</p>}
+                  <p className="mt-1 text-xs capitalize text-muted-foreground">{tk.priority} priority{tk.due_date ? ` · by ${fmtDate(tk.due_date)}` : ""}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {p.client.notes && (
+        <Section title="Team sheet">
+          <div className="rounded-md border bg-card p-5"><p className="whitespace-pre-wrap text-sm leading-relaxed">{p.client.notes}</p></div>
+        </Section>
+      )}
 
       <Section title="Matchday graphics to-do">
         {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="space-y-3">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} />)}</ul>}
@@ -333,6 +363,7 @@ function Kit({ label, k }: { label: string; k: Any }) {
   return (
     <div className="rounded-md border bg-card p-5">
       <p className="eyebrow mb-3">{label}</p>
+      {k?.badge && <img src={k.badge} alt={`${label} badge`} className="mb-4 h-20 w-20 rounded-md border object-contain bg-white" />}
       {cols.length === 0 ? <p className="text-sm text-muted-foreground">Not set yet.</p> : (
         <div className="flex gap-3">{cols.map((c) => (
           <div key={c} className="text-center"><div className="h-14 w-14 rounded-md border" style={{ background: k[c] }} /><p className="mt-1 text-xs capitalize text-muted-foreground">{c}</p><p className="text-[10px] uppercase text-muted-foreground">{k[c]}</p></div>

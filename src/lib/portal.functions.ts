@@ -28,27 +28,30 @@ export const getPortal = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { client, admin } = await resolveClient(data);
     const cid = client.id;
-    const [onb, projects, files, invoices, proposals, fixtures] = await Promise.all([
+    const [onb, projects, files, invoices, proposals, fixtures, tasks] = await Promise.all([
       admin.from("onboarding_items").select("*").eq("client_id", cid).order("position"),
       admin.from("projects").select("id, name, description, status, due_date, milestones(id, title, due_date, done, position)").eq("client_id", cid).order("created_at", { ascending: false }),
       admin.from("deliverables").select("*").eq("client_id", cid).order("created_at", { ascending: false }),
       admin.from("invoices").select("id, number, issue_date, due_date, status, items, tax_rate, paid_at").eq("client_id", cid).neq("status", "draft").order("issue_date", { ascending: false }),
       admin.from("proposals").select("id, kind, title, body, items, status, accepted_name, accepted_at, created_at").eq("client_id", cid).neq("status", "draft").order("created_at", { ascending: false }),
       admin.from("sports_fixtures").select("*").eq("client_id", cid).order("match_date"),
+      admin.from("tasks").select("id, title, notes, status, priority, due_date").eq("client_id", cid).order("created_at"),
     ]);
     const deliverables = await Promise.all((files.data ?? []).map(async (f) => {
       let url: string | null = null;
-      if (f.file_path) url = (await admin.storage.from("files").createSignedUrl(f.file_path, 3600)).data?.signedUrl ?? null;
+      if (f.file_path && (f.file_path.startsWith("http") || f.file_path.startsWith("data:"))) url = f.file_path;
+      else if (f.file_path) url = (await admin.storage.from("files").createSignedUrl(f.file_path, 3600)).data?.signedUrl ?? null;
       return { ...f, url };
     }));
     return {
-      client: { id: cid, name: client.name, company: client.company, portal_type: client.portal_type, home_kit: client.home_kit, away_kit: client.away_kit, monthly_fee: client.monthly_fee },
+      client: { id: cid, name: client.name, company: client.company, portal_type: client.portal_type, home_kit: client.home_kit, away_kit: client.away_kit, monthly_fee: client.monthly_fee, notes: client.notes },
       onboarding: onb.data ?? [],
       projects: projects.data ?? [],
       deliverables,
       invoices: invoices.data ?? [],
       proposals: proposals.data ?? [],
       fixtures: fixtures.data ?? [],
+      tasks: tasks.data ?? [],
     };
   });
 
