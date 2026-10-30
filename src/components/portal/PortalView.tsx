@@ -103,7 +103,17 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         .sports .bg-success\/15 { background: rgba(110,231,160,.12) !important; }
         .sports .text-destructive { color: #FF8A8A !important; }
         .sports .bg-destructive\/10 { background: rgba(255,138,138,.12) !important; }
-        .sports input[type="checkbox"] { accent-color: #FFD520; }        .sports .fx-card { background: rgba(255,255,255,.05) !important; border-color: rgba(255,255,255,.1) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+        .sports input[type="checkbox"] { accent-color: #FFD520; }        .sports .bg-cream { background: rgba(255,255,255,.06) !important; border-color: rgba(255,255,255,.12) !important; }
+        .sports .bg-primary { background: #fff !important; color: #0A2547 !important; }
+        .sports .bg-primary:hover { background: rgba(255,255,255,.85) !important; }
+        .sports .bg-background { background: rgba(255,255,255,.06) !important; color: #EAF2FF !important; }
+        .sports .text-primary { color: #9CC2FF !important; }
+        .sports details summary { color: #EAF2FF; }
+        .sports .accent-primary { accent-color: #FFD520; }
+        .sports ::selection { background: rgba(255,213,32,.35); }
+        .sports [role="progressbar"] { background: rgba(255,255,255,.14) !important; border-radius: 999px; }
+        .sports [role="progressbar"] > * { background: #FFD520 !important; }
+        .sports .fx-card { background: rgba(255,255,255,.05) !important; border-color: rgba(255,255,255,.1) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
         .sports .fx-card:hover { background: rgba(255,255,255,.085) !important; transform: translateY(-2px); border-color: rgba(255,255,255,.2) !important; box-shadow: 0 16px 40px rgba(0,0,0,.35); }
 
       `}</style>
