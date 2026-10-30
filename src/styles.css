@@ -214,3 +214,10 @@ body {
 .hero-btn { border-radius: 999px; transition: transform .2s ease, box-shadow .2s ease, background .2s ease; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
 .hero-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(0,0,0,.35); }
 @media (prefers-reduced-motion: reduce) { .load-bar span, .load-glass, .fx-modal { animation: none !important; } }
+
+/* ---- Command palette polish ---- */
+[cmdk-root] { border-radius: 1.1rem !important; overflow: hidden; border: 1px solid rgba(23,75,80,.14) !important; box-shadow: 0 30px 80px rgba(23,75,80,.28) !important; background: #FDFBF7 !important; }
+[cmdk-input] { height: 3.4rem !important; font-size: .95rem !important; }
+[cmdk-item] { border-radius: .65rem; transition: background .15s ease; }
+[cmdk-item][data-selected="true"] { background: rgba(23,75,80,.09) !important; }
+[cmdk-group-heading] { font-family: "Jost", sans-serif !important; letter-spacing: .14em; text-transform: uppercase; font-size: .65rem !important; color: rgba(23,75,80,.55) !important; }
