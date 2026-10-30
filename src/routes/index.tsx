@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { LOGO_URL } from "@/lib/format";
 
@@ -17,6 +18,15 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes("type=recovery") && hash.includes("access_token")) {
+      window.location.replace("/auth" + hash);
+    }
+  }, [navigate]);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-primary-deep px-6 text-center text-primary-foreground">
       <img src={LOGO_URL} alt="Nine3 Designs" className="h-28" />
