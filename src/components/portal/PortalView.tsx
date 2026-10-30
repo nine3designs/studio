@@ -530,7 +530,13 @@ function Fixture({ f, client }: { f: Any; client?: Any }) {
         <span className="text-xs text-muted-foreground">{done}/{g.length} ready</span>
       </div>
       <div className="mt-2 flex flex-wrap gap-2">{g.map((x, i) => (
-        <span key={i} className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${x.done ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{x.done && <Check className="h-3 w-3" />}{x.name}</span>
+        x.done && x.url ? (
+          <a key={i} href={x.url} target="_blank" rel="noreferrer" className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-transform hover:scale-105 ${x.done ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`} title="Tap to download">
+            <Download className="h-3 w-3" />{x.name}
+          </a>
+        ) : (
+          <span key={i} className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${x.done ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{x.done && <Check className="h-3 w-3" />}{x.name}</span>
+        )
       ))}</div>
     </li>
   );

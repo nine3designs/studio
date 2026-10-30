@@ -270,6 +270,17 @@ function Sports({ client }: { client: any }) {
   const [fee, setFee] = useState(client.monthly_fee ?? "");
   const [fx, setFx] = useState({ match_date: "", opponent: "", venue: "home", competition: "" });
 
+  async function uploadGraphic(f: any, i: number, file: File) {
+    try {
+      const path = await uploadFile(client.id, file);
+      const graphics = [...f.graphics];
+      graphics[i] = { ...graphics[i], done: true, path };
+      await saveFx.mutateAsync({ id: f.id, graphics });
+      logActivity(client.id, `Uploaded ${graphics[i].name} for ${f.opponent} (matchday)`);
+      toast.success(`${graphics[i].name} uploaded \u00b7 live on the portal`);
+    } catch (e) { toast.error((e as Error).message); }
+  }
+
   const kitEditor = (label: string, k: Kit, set: (k: Kit) => void) => (
     <div className="space-y-3 rounded-md border bg-cream p-4">
       <p className="eyebrow">{label}</p>
@@ -316,14 +327,25 @@ function Sports({ client }: { client: any }) {
                   <p className="font-medium">{fmtDate(f.match_date)} · vs {f.opponent} <span className="text-xs uppercase text-muted-foreground">({f.venue}{f.competition ? ` · ${f.competition}` : ""})</span></p>
                   <button className="text-muted-foreground hover:text-destructive" onClick={() => removeFx.mutate(f.id)}><Trash2 className="h-4 w-4" /></button>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-3">
-                  {(f.graphics as { name: string; done: boolean }[]).map((g, i) => (
-                    <label key={i} className="flex items-center gap-1.5 text-sm">
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(f.graphics as { name: string; done: boolean; path?: string }[]).map((g, i) => (
+                    <span key={i} className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm ${g.done ? "border-success/40 bg-success/10" : "border-border bg-muted/40"}`}>
                       <input type="checkbox" className="accent-primary" checked={g.done} onChange={(e) => {
                         const graphics = [...f.graphics]; graphics[i] = { ...g, done: e.target.checked };
                         saveFx.mutate({ id: f.id, graphics });
-                      }} />{g.name}
-                    </label>
+                      }} />
+                      {g.name}
+                      <label className="cursor-pointer rounded-full p-0.5 text-muted-foreground transition-colors hover:text-primary" title="Upload the finished graphic">
+                        <Upload className="h-3.5 w-3.5" />
+                        <input type="file" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadGraphic(f, i, file); e.target.value = ""; }} />
+                      </label>
+                      {g.path && (
+                        <button className="rounded-full p-0.5 text-muted-foreground transition-colors hover:text-primary" title="Preview file"
+                          onClick={async () => { try { const u = g.path!.startsWith("http") ? g.path! : await openFile(g.path!); if (u) window.open(u, "_blank"); } catch (err) { toast.error((err as Error).message); } }}>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </span>
                   ))}
                 </div>
               </li>

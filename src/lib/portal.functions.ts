@@ -50,6 +50,14 @@ export const getPortal = createServerFn({ method: "POST" })
       }));
       return { ...f, url, history };
     }));
+    const fixtureRows = await Promise.all((fixtures.data ?? []).map(async (fx) => {
+      const graphics = await Promise.all((((fx as Any).graphics as Any[]) ?? []).map(async (g: Any) => {
+        if (!g?.path) return g;
+        const u: string | null = String(g.path).startsWith("http") ? g.path : (await admin.storage.from("files").createSignedUrl(g.path, 3600)).data?.signedUrl ?? null;
+        return { ...g, url: u };
+      }));
+      return { ...fx, graphics };
+    }));
     return {
       client: { id: cid, name: client.name, company: client.company, portal_type: client.portal_type, home_kit: client.home_kit, away_kit: client.away_kit, monthly_fee: client.monthly_fee, notes: client.notes, portal_prefs: (client as Any).portal_prefs ?? null },
       onboarding: onb.data ?? [],
@@ -57,7 +65,7 @@ export const getPortal = createServerFn({ method: "POST" })
       deliverables,
       invoices: invoices.data ?? [],
       proposals: proposals.data ?? [],
-      fixtures: fixtures.data ?? [],
+      fixtures: fixtureRows,
       tasks: tasks.data ?? [],
       activity: activity.data ?? [],
     };
