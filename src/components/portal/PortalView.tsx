@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Heart, HelpCircle, Menu, PartyPopper, Upload, X } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Heart, HelpCircle, Menu, PartyPopper, Upload, X, Home, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,6 +124,12 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         .sports .fx-modal ::placeholder { color: rgba(255,255,255,.35); }
         .sports .fx-modal { animation: fxpop .28s cubic-bezier(.2,.9,.3,1.15); }
         @keyframes fxpop { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
+        .sports [role="tablist"] { gap: 4px !important; border-radius: 999px !important; padding: 5px !important; background: rgba(255,255,255,.08) !important; border: 1px solid rgba(255,255,255,.14) !important; }
+        .sports [role="tab"] { color: rgba(234,242,255,.72) !important; font-weight: 600; letter-spacing: .09em; }
+        .sports [role="tab"][aria-selected="true"] { background: linear-gradient(135deg, #FFD520, #E8BE0D) !important; color: #0A2547 !important; box-shadow: 0 6px 18px rgba(255,213,32,.3); }
+        .hero-bg-lines { position: absolute; inset: 0; pointer-events: none; background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.07) 0 1px, transparent 1px 30px), radial-gradient(circle at 88% 15%, rgba(255,213,32,.22), transparent 50%), radial-gradient(circle at 5% 100%, rgba(126,200,227,.15), transparent 45%); }
+        .hero-underline { height: 4px; width: 130px; border-radius: 999px; background: linear-gradient(90deg, #FFD520, rgba(255,255,255,.9)); animation: heroshine 2.8s ease-in-out infinite; }
+        @keyframes heroshine { 0%,100% { width: 130px; opacity: .95; } 50% { width: 230px; opacity: .55; } }
         @media (max-width: 640px) {
           .sports main { padding-left: 1rem !important; padding-right: 1rem !important; }
           .sports-hero { padding: 1.1rem !important; }
@@ -309,7 +315,7 @@ function FileGrid({ files, empty = "No files yet." }: { files: Any[]; empty?: st
   );
 }
 
-function UploadBox({ token, kind, label }: { token: string | null; kind: "upload" | "resource"; label: string }) {
+function UploadBox({ token, kind, label }: { token: string | null; kind: string; label: string }) {
   const act = useAct(token);
   const [files, setFiles] = useState<FileList | null>(null);
   const [busy, setBusy] = useState(false);
@@ -399,6 +405,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const resources = p.deliverables.filter((d: Any) => d.uploaded_by === "client");
   const archive = p.deliverables.filter((d: Any) => d.kind === "completed" || d.kind === "deliverable" || (d.kind === "proof" && d.status === "approved"));
   const proofs = p.deliverables.filter((d: Any) => d.kind === "proof" && d.status !== "approved");
+  const photos = p.deliverables.filter((d: Any) => d.kind === "photo");
   const cfg = (p.client.portal_prefs ?? {}).monthly_config ?? null;
   const payMonths: { key: string; label: string; paid: boolean }[] = [];
   if (cfg?.start && cfg?.count) {
@@ -411,6 +418,9 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   }
 
   const [openFx, setOpenFx] = useState<Any | null>(null);
+  const [tab, setTab] = useState("fixtures");
+  const [showAllFx, setShowAllFx] = useState(false);
+  const [reqOpen, setReqOpen] = useState(false);
   const next = upcoming[0];
   const nextKit = next ? (next.venue === "home" ? p.client.home_kit : p.client.away_kit) : null;
   const nextGfx = next ? ((next.graphics ?? []) as { name: string; done: boolean }[]) : [];
@@ -418,32 +428,39 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
 
   const tabs = [
     { v: "fixtures", l: "FIXTURES" },
-    { v: "todo", l: "TO-DO" },
-    { v: "proofs", l: "PROOFS" },
+    { v: "proofs", l: "PLAYER PHOTOS" },
     { v: "files", l: "GRAPHICS" },
     { v: "payments", l: "PAYMENTS" },
     { v: "help", l: "HELP" },
+    { v: "todo", l: "TO-DO" },
   ];
 
   return (
     <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Outfit', ui-sans-serif, sans-serif" } as Any}>
       {next && (
-        <section className="sports-hero portal-fade overflow-hidden rounded-md p-6 text-white md:p-8">
+        <section className="sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8">
+          <div className="hero-bg-lines" aria-hidden="true" />
+          <button type="button" onClick={() => { setTab("fixtures"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="absolute right-5 top-5 z-10 rounded-full bg-white/10 p-2 text-white/80 backdrop-blur transition hover:bg-white/20 hover:text-white" aria-label="Back to dashboard"><Home className="h-5 w-5" /></button>
           <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {fmtDate(next.match_date)}</p>
-          <h2 className="font-heading text-3xl font-semibold">
+          <div className="relative mt-2 flex items-center gap-4">
+            {p.client.home_kit?.badge && <img src={p.client.home_kit.badge} alt="Team badge" className="h-14 w-14 rounded-xl bg-white/10 object-contain p-1 ring-1 ring-white/25 md:h-16 md:w-16" />}
+            <div>
+              <h2 className="font-heading text-4xl font-bold tracking-tight md:text-5xl" style={{ fontFamily: "'League Spartan', sans-serif" }}>{p.client.company || p.client.name}</h2>
+              <div className="hero-underline mt-2" />
+            </div>
+          </div>
+          <p className="mt-4 text-lg font-medium">
             {next.venue === "home" ? "vs" : "away at"} {next.opponent}
-          </h2>
-          <p className="mt-1 text-sm opacity-80">
-            {next.venue === "home" ? "Home" : "Away"}{next.competition ? ` · ${next.competition}` : ""}
+            <span className="ml-2 text-sm opacity-75">{next.venue === "home" ? "Home" : "Away"}{next.competition ? ` · ${next.competition}` : ""}</span>
           </p>
-          <div className="mt-3 flex items-center gap-3">
+          <div className="relative mt-3 flex items-center gap-3">
             {(["primary", "secondary"] as const).filter((c) => nextKit?.[c]).map((c) => (
               <span key={c} className="h-6 w-6 rounded-sm border-2 border-white/70 shadow-sm" style={{ background: nextKit[c] }} title={nextKit[c]} />
             ))}
             <span className="text-xs opacity-80">{next.venue === "home" ? "Home colours" : "Away colours"}</span>
           </div>
           {nextGfx.length > 0 && (
-            <div className="mt-4 max-w-xs">
+            <div className="relative mt-4 max-w-xs">
               <div className="mb-1 flex justify-between text-xs opacity-80"><span>Matchday graphics</span><span>{gfxDone}/{nextGfx.length} ready</span></div>
               <Progress value={(gfxDone / nextGfx.length) * 100} />
             </div>
@@ -451,7 +468,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
         </section>
       )}
 
-      <Tabs defaultValue="fixtures">
+      <Tabs value={tab} onValueChange={(v: string) => setTab(v)}>
         <MobileTabs tabs={tabs} />
         <TabsList className="mb-8 hidden flex-wrap md:flex">
           {tabs.map((t) => <TabsTrigger key={t.v} value={t.v}>{t.l}</TabsTrigger>)}
@@ -459,11 +476,25 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
 
         <TabsContent value="fixtures" className="mt-0 space-y-8">
           <div className="grid gap-6 md:grid-cols-2">
-            <Kit label="Home kit" k={p.client.home_kit} />
-            <Kit label="Away kit" k={p.client.away_kit} />
+            <Kit label="Kit colours" k={p.client.home_kit} away={p.client.away_kit} />
+            <div className="rounded-md border bg-card p-5">
+              <p className="eyebrow mb-3">Quick actions</p>
+              <div className="flex flex-col gap-2">
+                <Button variant="outline" onClick={() => setReqOpen(true)} className="justify-start"><Plus className="h-4 w-4" /> New graphic request</Button>
+                <Button variant="outline" onClick={() => next && setOpenFx(next)} disabled={!next} className="justify-start"><Plus className="h-4 w-4" /> Add team sheet</Button>
+                {!next && <p className="text-xs text-muted-foreground">No upcoming fixture yet · team sheets attach to a fixture.</p>}
+              </div>
+            </div>
           </div>
           <Section title="Upcoming fixtures">
-            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="grid gap-3 sm:grid-cols-2">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} onOpen={() => setOpenFx(f)} />)}</ul>}
+            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : (
+              <>
+                <ul className="grid gap-3 sm:grid-cols-2">{(showAllFx ? upcoming : upcoming.slice(0, 2)).map((f: Any) => <Fixture key={f.id} f={f} client={p.client} onOpen={() => setOpenFx(f)} />)}</ul>
+                {upcoming.length > 2 && (
+                  <button type="button" onClick={() => setShowAllFx(!showAllFx)} className="mt-1 text-sm font-medium text-primary underline-offset-4 hover:underline">{showAllFx ? "See fewer" : `See all ${upcoming.length} fixtures`}</button>
+                )}
+              </>
+            )}
           </Section>
           {past.length > 0 && (
             <Section title="Previous fixtures">
@@ -473,45 +504,33 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
         </TabsContent>
 
         <TabsContent value="todo" className="mt-0 space-y-8">
-          {(p.tasks ?? []).length > 0 && (
-            <Section title="Graphics to-do list">
-              <ul className="space-y-2">
-                {p.tasks.map((tk: Any) => (
-                  <li key={tk.id} className="flex items-start gap-3 rounded-md border bg-card p-4">
-                    <Check className={`mt-0.5 h-4 w-4 ${tk.status === "done" ? "text-success" : "text-muted-foreground/30"}`} />
-                    <div className="min-w-0">
-                      <p className="font-medium">{tk.title}</p>
-                      {tk.notes && <p className="text-sm text-muted-foreground">{tk.notes}</p>}
-                      <p className="mt-1 text-xs capitalize text-muted-foreground">{tk.priority} priority{tk.due_date ? ` · by ${fmtDate(tk.due_date)}` : ""}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          )}
-          <Section title="Matchday graphics to-do">
-            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="grid gap-3 sm:grid-cols-2">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>}
-          </Section>
-          {p.client.notes && (
-            <Section title="Team sheet">
-              <div className="rounded-md border bg-card p-5"><p className="whitespace-pre-wrap text-sm leading-relaxed">{p.client.notes}</p></div>
-            </Section>
-          )}
+          <TodoList p={p} token={token} />
+          <NotesCard p={p} token={token} />
         </TabsContent>
 
-        <TabsContent value="proofs" className="mt-0">
-          {proofs.length === 0 ? <Empty>Nothing to review right now · new proofs will appear here.</Empty> : <Proofs proofs={proofs} token={token} />}
+        <TabsContent value="proofs" className="mt-0 space-y-8">
+          <Section title="Player photos">
+            <div className="space-y-4">
+              <UploadBox token={token} kind="photo" label="Upload player photos" />
+              <FileGrid files={photos} empty="No player photos uploaded yet." />
+            </div>
+          </Section>
+          {proofs.length > 0 && (
+            <Section title="Design proofs">
+              <Proofs proofs={proofs} token={token} />
+            </Section>
+          )}
         </TabsContent>
 
         <TabsContent value="files" className="mt-0 space-y-8">
-          <Section title="Weekly templates"><FileGrid files={templates} empty="No templates shared yet." /></Section>
+          <Section title="Templates"><FileGrid files={templates} empty="No templates shared yet." /></Section>
           <Section title="Resource photos">
             <div className="space-y-4">
-              <UploadBox token={token} kind="resource" label="Upload player photos, sponsor logos or match photos" />
+              <UploadBox token={token} kind="resource" label="Upload sponsor logos or match photos" />
               <FileGrid files={resources} empty="No photos uploaded yet." />
             </div>
           </Section>
-          <Section title="Completed work archive">
+          <Section title="Favourites">
             <FavFileGrid p={p} token={token} files={archive} empty="Finished graphics will appear here." />
           </Section>
         </TabsContent>
@@ -529,7 +548,6 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
                 ))}
               </ul>
             )}
-            <p className="mt-4 text-xs text-muted-foreground">Invoices are issued monthly · any questions, just ask.</p>
           </Section>
         </TabsContent>
 
@@ -541,22 +559,33 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
         </TabsContent>
       </Tabs>
       {openFx && <FxModal f={openFx} token={token} onClose={() => setOpenFx(null)} />}
+      {reqOpen && <ReqModal token={token} onClose={() => setReqOpen(false)} />}
     </div>
   );
 }
 
-function Kit({ label, k }: { label: string; k: Any }) {
+function Kit({ label, k, away }: { label: string; k: Any; away?: Any }) {
   const cols = (["primary", "secondary", "accent"] as const).filter((c) => k?.[c]);
+  const acols = away ? (["primary", "secondary", "accent"] as const).filter((c) => away?.[c]) : [];
+  const block = (kit: Any, list: typeof cols, title?: string) => (
+    <div>
+      {title && <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>}
+      {kit?.badge && <img src={kit.badge} alt={`${title ?? label} badge`} className="mb-3 h-16 w-16 rounded-md border bg-white object-contain" />}
+      {list.length === 0 ? <p className="text-sm text-muted-foreground">Not set yet.</p> : (
+        <div className="flex flex-wrap gap-3">{list.map((c) => (
+          <div key={c} className="text-center"><div className="h-12 w-12 rounded-md border" style={{ background: kit[c] }} /><p className="mt-1 text-xs capitalize text-muted-foreground">{c}</p><p className="text-[10px] uppercase text-muted-foreground">{kit[c]}</p></div>
+        ))}</div>
+      )}
+      {kit?.notes && <p className="mt-3 text-sm text-muted-foreground">{kit.notes}</p>}
+    </div>
+  );
   return (
     <div className="rounded-md border bg-card p-5">
       <p className="eyebrow mb-3">{label}</p>
-      {k?.badge && <img src={k.badge} alt={`${label} badge`} className="mb-4 h-20 w-20 rounded-md border object-contain bg-white" />}
-      {cols.length === 0 ? <p className="text-sm text-muted-foreground">Not set yet.</p> : (
-        <div className="flex gap-3">{cols.map((c) => (
-          <div key={c} className="text-center"><div className="h-14 w-14 rounded-md border" style={{ background: k[c] }} /><p className="mt-1 text-xs capitalize text-muted-foreground">{c}</p><p className="text-[10px] uppercase text-muted-foreground">{k[c]}</p></div>
-        ))}</div>
-      )}
-      {k?.notes && <p className="mt-3 text-sm text-muted-foreground">{k.notes}</p>}
+      <div className={away ? "grid grid-cols-2 gap-4" : ""}>
+        {block(k, cols, away ? "Home" : undefined)}
+        {away && block(away, acols, "Away")}
+      </div>
     </div>
   );
 }
@@ -669,6 +698,88 @@ function FxModal({ f, token, onClose }: { f: Any; token: string | null; onClose:
   );
 }
 
+function TodoList({ p, token }: { p: Any; token: string | null }) {
+  const act = useAct(token);
+  const [title, setTitle] = useState("");
+  const tasks: Any[] = p.tasks ?? [];
+  return (
+    <Section title="Graphics to-do list">
+      <form
+        onSubmit={async (e: Any) => { e.preventDefault(); if (!title.trim()) return; const ok = await act({ type: "taskAdd", title: title.trim() }, "Added to the list"); if (ok) setTitle(""); }}
+        className="mb-4 flex gap-2"
+      >
+        <Input value={title} onChange={(e: Any) => setTitle(e.target.value)} placeholder="Add something to the list…" />
+        <Button type="submit" variant="outline"><Plus className="h-4 w-4" /> Add</Button>
+      </form>
+      {tasks.length === 0 ? <Empty>Nothing on the list yet.</Empty> : (
+        <ul className="space-y-2">
+          {tasks.map((tk: Any) => (
+            <li key={tk.id} className="flex items-start gap-3 rounded-md border bg-card p-4">
+              <button type="button" aria-label={tk.status === "done" ? "Mark as not done" : "Mark as done"} onClick={() => act({ type: "taskDone", id: tk.id, done: tk.status !== "done" })} className={`mt-0.5 rounded-full border p-0.5 transition ${tk.status === "done" ? "border-success bg-success text-white" : "border-muted-foreground/40 hover:border-primary"}`}><Check className="h-3.5 w-3.5" /></button>
+              <div className="min-w-0 flex-1">
+                <p className={`font-medium ${tk.status === "done" ? "text-muted-foreground line-through" : ""}`}>{tk.title}</p>
+                {tk.notes && <p className="text-sm text-muted-foreground">{tk.notes}</p>}
+                <p className="mt-1 text-xs capitalize text-muted-foreground">{tk.priority} priority{tk.due_date ? ` · by ${fmtDate(tk.due_date)}` : ""}</p>
+              </div>
+              <button type="button" aria-label="Remove item" onClick={() => { if (confirm("Remove this item?")) act({ type: "taskDelete", id: tk.id }, "Removed"); }} className="rounded-full p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
+function NotesCard({ p, token }: { p: Any; token: string | null }) {
+  const act = useAct(token);
+  const [text, setText] = useState<string>(p.client.notes ?? "");
+  return (
+    <Section title="Notes">
+      <Textarea rows={5} value={text} onChange={(e: Any) => setText(e.target.value)} placeholder="Anything you want the studio to know…" />
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <Button onClick={() => act({ type: "clientNote", text }, "Notes saved")} disabled={text === (p.client.notes ?? "")}>Save notes</Button>
+        <p className="text-xs text-muted-foreground">You and the studio can both edit this.</p>
+      </div>
+    </Section>
+  );
+}
+
+function ReqModal({ token, onClose }: { token: string | null; onClose: () => void }) {
+  const act = useAct(token);
+  const [what, setWhat] = useState("");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function send() {
+    if (!what.trim()) return;
+    setBusy(true);
+    const ok = await act({ type: "newRequest", title: what.trim(), notes: notes.trim() || undefined }, "Request sent · we'll get straight on it");
+    if (ok) onClose();
+    setBusy(false);
+  }
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center" onClick={onClose}>
+      <div className="fx-modal max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-white/10 bg-[#0A1E38]/95 p-6 shadow-2xl backdrop-blur-xl md:rounded-2xl" onClick={(e: Any) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-heading text-2xl font-bold tracking-tight text-white">New graphic request</h3>
+          <button type="button" onClick={onClose} className="rounded-full p-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white" aria-label="Close"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="mt-5 space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-white/60">What do you need?</label>
+          <Input value={what} onChange={(e: Any) => setWhat(e.target.value)} placeholder="e.g. Matchday graphic for Saturday" className="fx-sheet-input" />
+        </div>
+        <div className="mt-4 space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-white/60">Details</label>
+          <Textarea rows={4} value={notes} onChange={(e: Any) => setNotes(e.target.value)} placeholder="Names, date, anything specific…" className="fx-sheet-input" />
+        </div>
+        <div className="mt-6 flex gap-2">
+          <Button onClick={send} disabled={busy || !what.trim()}>{busy ? "Sending…" : "Send request"}</Button>
+          <Button variant="ghost" onClick={onClose} className="text-white/70 hover:bg-white/10 hover:text-white">Cancel</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- Portal experience upgrades ---------------- */
 function PortalLoader() {
   return (
@@ -771,6 +882,7 @@ function FavFileGrid({ p, token, files, empty }: { p: Any; token: string | null;
               <div key={f.id} className="relative overflow-hidden rounded-md border bg-card">
                 <Preview f={f} />
                 <button type="button" aria-label={isFav ? "Remove favourite" : "Save favourite"} onClick={() => act({ type: "favourite", id: f.id, on: !isFav })} className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 shadow-sm transition-transform hover:scale-110">
+                  <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-current" : ""}`} />
                   <Heart className={`h-4 w-4 ${isFav ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
                 </button>
                 <div className="flex items-center justify-between gap-2 p-2">
