@@ -35,10 +35,10 @@ function Index() {
         Your space for projects, proofs, deliverables and invoices with Nine3 Designs.
       </p>
       <div className="mt-10 flex flex-wrap justify-center gap-3">
-        <Button asChild className="bg-gold text-gold-foreground hover:bg-gold-soft">
+        <Button asChild className="hero-btn bg-gold text-gold-foreground hover:bg-gold-soft uppercase tracking-widest">
           <Link to="/portal">Client portal</Link>
         </Button>
-        <Button asChild variant="outline" className="border-gold/60 bg-transparent text-primary-foreground hover:bg-primary">
+        <Button asChild variant="outline" className="hero-btn border-white/40 bg-white/10 text-primary-foreground backdrop-blur-md hover:bg-white/20 uppercase tracking-widest">
           <Link to="/auth">Studio sign in</Link>
         </Button>
       </div>
