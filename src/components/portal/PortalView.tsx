@@ -71,8 +71,8 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         @keyframes logoPulse { 0%,100% { opacity: .8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
       `}</style>
       <header className="bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "#0E55AF" } : undefined}>
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-6">
-          <img src={LOGO_URL} alt="Nine3 Designs" className="h-16 md:h-20" />
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-7">
+          <img src={LOGO_URL} alt="Nine3 Designs" className="h-24 md:h-36" />
         </div>
         {name && <div className="mx-auto max-w-5xl px-6 pb-8"><p className="text-sm opacity-70">Welcome,</p><h1 className="font-heading text-3xl font-semibold">{name}</h1></div>}
       </header>
@@ -505,7 +505,7 @@ function Fixture({ f, client }: { f: Any; client?: Any }) {
 function PortalLoader() {
   return (
     <div className="flex flex-col items-center py-24 text-center">
-      <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-32 md:h-40" />
+      <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-40 md:h-52" />
       <p className="mt-6 text-sm text-muted-foreground">Preparing your portal…</p>
     </div>
   );
