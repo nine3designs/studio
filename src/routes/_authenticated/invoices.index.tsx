@@ -6,7 +6,7 @@ import { useRows, useSave } from "@/lib/db";
 import { effectiveStatus, fmtDate, invoiceTotals, money } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/invoices/")({
-  head: () => ({ meta: [{ title: "Invoices — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Invoices · Nine3 Studio" }] }),
   component: Invoices,
 });
 
@@ -40,7 +40,7 @@ function Invoices() {
               {invoices.map((i) => (
                 <tr key={i.id} className="border-t">
                   <td className="p-3"><Link to="/invoices/$id" params={{ id: i.id }} className="font-medium hover:text-primary-soft">{i.number}</Link></td>
-                  <td className="p-3">{i.clients?.name ?? "—"}</td>
+                  <td className="p-3">{i.clients?.name ?? "·"}</td>
                   <td className="p-3">{fmtDate(i.issue_date)}</td>
                   <td className="p-3">{fmtDate(i.due_date)}</td>
                   <td className="p-3 text-right">{money(invoiceTotals(i.items, i.tax_rate).total)}</td>

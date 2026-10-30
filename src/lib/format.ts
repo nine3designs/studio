@@ -20,7 +20,7 @@ export function effectiveStatus(inv: { status: string; due_date?: string | null 
 }
 
 export function fmtDate(d: string | null | undefined) {
-  if (!d) return "—";
+  if (!d) return "·";
   return new Date(d.length === 10 ? d + "T00:00:00" : d).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",

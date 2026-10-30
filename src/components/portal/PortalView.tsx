@@ -149,7 +149,7 @@ function StandardPortal({ p, token }: { p: Any; token: string | null }) {
       <TabsContent value="proofs"><Proofs proofs={proofs} token={token} /></TabsContent>
       <TabsContent value="files" className="space-y-6">
         <UploadBox token={token} kind="upload" label="Send us files (brand assets, copy, photos)" />
-        <FavFileGrid p={p} token={token} files={p.deliverables.filter((d: Any) => d.kind !== "proof")} empty="No files yet — your final files will live here." />
+        <FavFileGrid p={p} token={token} files={p.deliverables.filter((d: Any) => d.kind !== "proof")} empty="No files yet · your final files will live here." />
       </TabsContent>
       <TabsContent value="invoices"><Invoices invoices={p.invoices} /></TabsContent>
       <TabsContent value="documents"><Documents docs={p.proposals} token={token} /></TabsContent>
@@ -210,7 +210,7 @@ function ProofCard({ f, token }: { f: Any; token: string | null }) {
           </div>
         ) : (
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => confirm("Approve this design?") && act({ type: "proof", id: f.id, decision: "approved" }, "Design approved — thank you!")}><Check className="h-4 w-4" /> Approve</Button>
+            <Button size="sm" onClick={() => confirm("Approve this design?") && act({ type: "proof", id: f.id, decision: "approved" }, "Design approved · thank you!")}><Check className="h-4 w-4" /> Approve</Button>
             <Button size="sm" variant="outline" onClick={() => setRevising(true)}>Request changes</Button>
           </div>
         ))}
@@ -258,7 +258,7 @@ function UploadBox({ token, kind, label }: { token: string | null; kind: "upload
       if (error) { toast.error(error.message); break; }
       await act({ type: "recordUpload", path: r.path, fileName: file.name, kind });
     }
-    toast.success("Uploaded — thank you!");
+    toast.success("Uploaded, thank you!");
     setFiles(null); (e.target as HTMLFormElement).reset();
     setBusy(false);
   }
@@ -307,7 +307,7 @@ function DocCard({ d, token }: { d: Any; token: string | null }) {
       {d.status === "accepted" ? <p className="mt-4 text-sm text-success">Accepted by {d.accepted_name} on {fmtDate(d.accepted_at)}</p> : d.status === "sent" && (
         <div className="mt-5 flex flex-wrap items-end gap-2 border-t pt-4">
           <div className="flex-1 space-y-1"><p className="text-xs text-muted-foreground">Type your full name to accept and sign</p><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" /></div>
-          <Button onClick={() => act({ type: "accept", id: d.id, name }, "Accepted — thank you!")}>Accept & sign</Button>
+          <Button onClick={() => act({ type: "accept", id: d.id, name }, "Accepted, thank you!")}>Accept & sign</Button>
         </div>
       )}
     </div>
@@ -468,7 +468,7 @@ function CompletionBanner({ p }: { p: Any; token: string | null }) {
         <div className="min-w-60 flex-1">
           <p className="eyebrow opacity-70">Project complete</p>
           <h3 className="font-heading text-2xl font-semibold">{pr.name} is wrapped!</h3>
-          <p className="mt-1 text-sm opacity-80">Everything's signed off — your final files are yours to keep. Download them below or save your favourites.</p>
+          <p className="mt-1 text-sm opacity-80">Everything's signed off · your final files are yours to keep. Download them below or save your favourites.</p>
         </div>
         <Button size="sm" onClick={() => pickTab("files")}><Download className="h-4 w-4" /> Download centre</Button>
       </div>
@@ -515,7 +515,7 @@ function FavFileGrid({ p, token, files, empty }: { p: Any; token: string | null;
           <Heart className={`h-3.5 w-3.5 ${favOnly ? "" : "text-muted-foreground"}`} /> Favourites{favs.length ? ` (${favs.length})` : ""}
         </Button>
       </div>
-      {shown.length === 0 ? <Empty>Nothing saved yet — tap the heart on any file.</Empty> : (
+      {shown.length === 0 ? <Empty>Nothing saved yet · tap the heart on any file.</Empty> : (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {shown.map((f: Any) => {
             const isFav = favs.includes(f.id);
@@ -545,7 +545,7 @@ function BookCall({ token, compact }: { token: string | null; compact?: boolean 
   return (
     <form className="grid gap-3 sm:grid-cols-2" onSubmit={async (e) => {
       e.preventDefault(); setBusy(true);
-      const ok = await act({ type: "bookCall", kind: v.kind, date: v.date, time: v.time || undefined, notes: v.notes || undefined }, "Call requested — we'll confirm within one working day.");
+      const ok = await act({ type: "bookCall", kind: v.kind, date: v.date, time: v.time || undefined, notes: v.notes || undefined }, "Call requested · we'll confirm within one working day.");
       if (ok) setV({ kind: "discovery", date: "", time: "", notes: "" });
       setBusy(false);
     }}>
@@ -607,11 +607,11 @@ function QuestionnaireCard({ p, token }: { p: Any; token: string | null }) {
   return (
     <Section title="Brand questionnaire">
       {done ? (
-        <div className="flex items-start gap-3 text-sm"><ClipboardList className="mt-0.5 h-4 w-4 text-success" /><p>Questionnaire received — thank you! We'll use it to shape your concepts.</p></div>
+        <div className="flex items-start gap-3 text-sm"><ClipboardList className="mt-0.5 h-4 w-4 text-success" /><p>Questionnaire received · thank you! We'll use it to shape your concepts.</p></div>
       ) : open ? (
         <form className="space-y-3" onSubmit={async (e) => {
           e.preventDefault(); setBusy(true);
-          const ok = await act({ type: "questionnaire", answers: v }, "Questionnaire sent — thank you!");
+          const ok = await act({ type: "questionnaire", answers: v }, "Questionnaire sent · thank you!");
           if (ok) setOpen(false);
           setBusy(false);
         }}>
@@ -623,7 +623,7 @@ function QuestionnaireCard({ p, token }: { p: Any; token: string | null }) {
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Later</Button>
             {savedTick && <span className="ml-auto flex items-center gap-1 text-xs text-success"><Check className="h-3.5 w-3.5" /> All changes saved</span>}
           </div>
-          <p className="text-xs text-muted-foreground">Your answers save automatically as you type — come back any time.</p>
+          <p className="text-xs text-muted-foreground">Your answers save automatically as you type · come back any time.</p>
         </form>
       ) : (
         <>
@@ -637,10 +637,10 @@ function QuestionnaireCard({ p, token }: { p: Any; token: string | null }) {
 
 const FAQS: { q: string; a: string }[] = [
   { q: "How do I approve a design?", a: "Open Proofs, review the design, then choose Approve or Request changes. If you'd like tweaks, tell us what to change and we'll get straight on it." },
-  { q: "How do I send you files, photos or content?", a: "Use the upload box in Files. Brand assets, copy, photos — anything. It comes straight to us and we get notified." },
+  { q: "How do I send you files, photos or content?", a: "Use the upload box in Files. Brand assets, copy, photos · anything. It comes straight to us and we get notified." },
   { q: "How do downloads work?", a: "Every finished file is in your download centre with a download button. Tap the heart to save favourites so you can find them again quickly." },
   { q: "When are invoices issued?", a: "Invoices appear here as soon as they're issued, usually monthly. Paid and outstanding amounts are always visible." },
-  { q: "Can I book a call?", a: "Yes — choose discovery call or design review, pick a date and we'll confirm by email within one working day." },
+  { q: "Can I book a call?", a: "Yes · choose discovery call or design review, pick a date and we'll confirm by email within one working day." },
   { q: "Something looks wrong, or I need a hand", a: "Email natalie@nine3designs.co.uk and we'll sort it quickly." },
 ];
 

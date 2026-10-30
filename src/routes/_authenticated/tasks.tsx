@@ -7,7 +7,7 @@ import { useRemove, useRows, useSave } from "@/lib/db";
 import { fmtDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/tasks")({
-  head: () => ({ meta: [{ title: "Tasks — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Tasks · Nine3 Studio" }] }),
   component: Tasks,
 });
 

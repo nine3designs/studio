@@ -10,7 +10,7 @@ import { openFile, uploadFile, useRemove, useRows, useSave } from "@/lib/db";
 import { fmtDate, money } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/expenses")({
-  head: () => ({ meta: [{ title: "Expenses — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Expenses · Nine3 Studio" }] }),
   component: Expenses,
 });
 
@@ -47,7 +47,7 @@ function Expenses() {
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <StatCard label="This view" value={money(total)} hint={`${shown.length} expenses`} />
         <StatCard label={`Total ${year}`} value={money(yearTotal)} />
-        <div className="rounded-md border bg-card p-5"><p className="eyebrow mb-2">By category</p>{byCat.length === 0 ? <p className="text-sm text-muted-foreground">—</p> : byCat.slice(0, 4).map(([c, v]) => <p key={c} className="flex justify-between text-sm"><span>{c}</span><span>{money(v)}</span></p>)}</div>
+        <div className="rounded-md border bg-card p-5"><p className="eyebrow mb-2">By category</p>{byCat.length === 0 ? <p className="text-sm text-muted-foreground">·</p> : byCat.slice(0, 4).map(([c, v]) => <p key={c} className="flex justify-between text-sm"><span>{c}</span><span>{money(v)}</span></p>)}</div>
       </div>
       <div className="mb-4 flex items-end gap-3">
         <div className="space-y-1.5"><Label>Month</Label><Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-48" /></div>
@@ -55,7 +55,7 @@ function Expenses() {
       </div>
       <FormDialog title={editing?.id ? "Edit expense" : "Add expense"} open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         {editing && <>
-          <div className="mb-4 space-y-1.5"><Label>Receipt</Label><Input type="file" onChange={(e) => setReceipt(e.target.files?.[0] ?? null)} />{editing.receipt_path && <p className="text-xs text-muted-foreground">A receipt is attached — choose a file to replace it.</p>}</div>
+          <div className="mb-4 space-y-1.5"><Label>Receipt</Label><Input type="file" onChange={(e) => setReceipt(e.target.files?.[0] ?? null)} />{editing.receipt_path && <p className="text-xs text-muted-foreground">A receipt is attached · choose a file to replace it.</p>}</div>
           <QuickForm fields={fields} initial={editing} onSubmit={async (v) => {
             const { projects: _p, ...row } = v;
             try { if (receipt) row["receipt_path"] = await uploadFile("expenses", receipt); } catch (e) { toast.error((e as Error).message); return; }
@@ -72,7 +72,7 @@ function Expenses() {
                 <td className="p-3">{fmtDate(r.spent_on)}</td>
                 <td className="p-3"><p className="font-medium">{r.description}</p>{r.vendor && <p className="text-xs text-muted-foreground">{r.vendor}</p>}</td>
                 <td className="p-3">{r.category}</td>
-                <td className="p-3 text-muted-foreground">{r.projects?.name ?? "—"}</td>
+                <td className="p-3 text-muted-foreground">{r.projects?.name ?? "·"}</td>
                 <td className="p-3 text-right">{money(r.amount)}</td>
                 <td className="p-3"><div className="flex justify-end gap-2">
                   {r.receipt_path && <button title="Receipt" onClick={() => openFile(r.receipt_path)} className="text-muted-foreground hover:text-primary"><Paperclip className="h-4 w-4" /></button>}

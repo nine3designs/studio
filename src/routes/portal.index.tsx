@@ -12,9 +12,9 @@ export const Route = createFileRoute("/portal/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Client portal sign in — Nine3 Designs" },
+      { title: "Client portal sign in · Nine3 Designs" },
       { name: "description", content: "Sign in to your Nine3 Designs client portal." },
-      { property: "og:title", content: "Client portal — Nine3 Designs" },
+      { property: "og:title", content: "Client portal · Nine3 Designs" },
       { property: "og:description", content: "Sign in to your Nine3 Designs client portal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -52,7 +52,7 @@ function EmailPortal() {
         const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + "/portal" } });
         if (error) toast.error(error.message); else setSent(true);
       }}>
-        {sent ? <p className="text-center text-sm">Check your inbox — we've emailed you a sign-in link.</p> : <>
+        {sent ? <p className="text-center text-sm">Check your inbox · we've emailed you a sign-in link.</p> : <>
           <div className="space-y-1.5"><Label>Your email</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
           <Button type="submit" className="w-full">Email me a sign-in link</Button>
           <p className="text-center text-xs text-muted-foreground">Use the email address Nine3 Designs has on file for you.</p>

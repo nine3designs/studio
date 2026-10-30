@@ -14,7 +14,7 @@ import { fmtDate, portalLink, randomToken } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/clients/$id")({
-  head: () => ({ meta: [{ title: "Client — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Client · Nine3 Studio" }] }),
   component: ClientDetail,
 });
 

@@ -10,7 +10,7 @@ import { logActivity, useRemove, useRows, useSave } from "@/lib/db";
 import { fmtDate, invoiceTotals, money, type LineItem } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/proposals")({
-  head: () => ({ meta: [{ title: "Proposals & Contracts — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Proposals & Contracts · Nine3 Studio" }] }),
   component: Proposals,
 });
 
@@ -53,7 +53,7 @@ function Proposals() {
           }}>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label>Type</Label><select className={sel} value={d.kind} onChange={(e) => setD({ ...d, kind: e.target.value })}><option value="proposal">Proposal</option><option value="contract">Contract</option></select></div>
-              <div className="space-y-1.5"><Label>Client</Label><select className={sel} value={d.client_id ?? ""} onChange={(e) => setD({ ...d, client_id: e.target.value || null })}><option value="">—</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+              <div className="space-y-1.5"><Label>Client</Label><select className={sel} value={d.client_id ?? ""} onChange={(e) => setD({ ...d, client_id: e.target.value || null })}><option value="">·</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
             </div>
             <div className="space-y-1.5"><Label>Title</Label><Input required value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} /></div>
             {templates.length > 0 && <div className="space-y-1.5"><Label>Start from a template</Label><select className={sel} value="" onChange={(e) => {
@@ -90,7 +90,7 @@ function Proposals() {
             <tbody>{shown.map((r) => (
               <tr key={r.id} className="border-t">
                 <td className="p-3"><p className="font-medium">{r.title}</p><p className="text-xs text-muted-foreground">{r.status === "accepted" ? `Signed by ${r.accepted_name} · ${fmtDate(r.accepted_at)}` : fmtDate(r.created_at)}</p></td>
-                <td className="p-3">{r.clients?.name ?? "—"}</td>
+                <td className="p-3">{r.clients?.name ?? "·"}</td>
                 <td className="p-3 capitalize">{r.kind}</td>
                 <td className="p-3"><StatusBadge status={r.status} /></td>
                 <td className="p-3 text-right">{money(invoiceTotals(r.items).total)}</td>

@@ -121,7 +121,7 @@ export const portalAction = createServerFn({ method: "POST" })
       const when = `${a.date}${a.time ? ` at ${a.time}` : ""}`;
       await admin.from("tasks").insert({
         client_id: cid,
-        title: `Call request: ${kind} — ${when}`,
+        title: `Call request: ${kind} · ${when}`,
         notes: `Requested by ${(a.name || "client").slice(0, 120)}. Preferred time: ${when}.${a.notes ? ` Notes: ${String(a.notes).slice(0, 1500)}` : ""}`,
         priority: "medium",
         status: "todo",
@@ -149,7 +149,7 @@ export const portalAction = createServerFn({ method: "POST" })
       const list = new Set<string>(Array.isArray(prefs.favourites) ? prefs.favourites : []);
       if (a.on) list.add(a.id); else list.delete(a.id);
       const { error } = await admin.from("clients").update({ portal_prefs: { ...prefs, favourites: [...list] } }).eq("id", cid);
-      if (error) throw new Error("Favourites aren't ready yet — please check back soon.");
+      if (error) throw new Error("Favourites aren't ready yet · please check back soon.");
       return { ok: true };
     }
     throw new Error("Unknown action");

@@ -93,7 +93,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
       <main className="flex-1 px-5 py-8 md:px-10">
         {children}
         <footer className="mt-16 border-t pt-6 text-center text-xs text-muted-foreground">
-          Nine3 Studio — crafted by <a href="https://nine3designs.co.uk" target="_blank" rel="noreferrer" className="underline-offset-2 hover:underline">Nine3 Designs</a> · Your Vision. Our Design.
+          Nine3 Studio · crafted by <a href="https://nine3designs.co.uk" target="_blank" rel="noreferrer" className="underline-offset-2 hover:underline">Nine3 Designs</a> · Your Vision. Our Design.
         </footer>
       </main>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />

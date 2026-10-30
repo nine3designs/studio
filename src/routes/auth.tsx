@@ -10,9 +10,9 @@ import { LOGO_URL } from "@/lib/format";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Studio sign in — Nine3 Designs" },
+      { title: "Studio sign in · Nine3 Designs" },
       { name: "description", content: "Sign in to the Nine3 Designs studio workspace." },
-      { property: "og:title", content: "Studio sign in — Nine3 Designs" },
+      { property: "og:title", content: "Studio sign in · Nine3 Designs" },
       { property: "og:description", content: "Sign in to the Nine3 Designs studio workspace." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -63,13 +63,13 @@ function AuthPage() {
       const { error } = await supabase.auth.updateUser({ password });
       setBusy(false);
       if (error) { toast.error(error.message); return; }
-      toast.success("Password updated — you're signed in.");
+      toast.success("Password updated · you're signed in.");
       navigate({ to: "/dashboard" });
     } else if (mode === "reset") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/auth" });
       setBusy(false);
       if (error) { toast.error(error.message); return; }
-      toast.success("Reset link sent — check your inbox.");
+      toast.success("Reset link sent · check your inbox.");
       setMode("in");
     } else if (mode === "in") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -99,7 +99,7 @@ function AuthPage() {
             <img src={LOGO_URL} alt="Nine3 Designs" className="h-16 md:hidden" />
             <p className="eyebrow mt-6 md:mt-0">Nine3 Designs</p>
             <h1 className="mt-3 text-4xl font-light leading-snug text-primary-deep">{title}</h1>
-            {recovery && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Pick something you'll remember — minimum 6 characters.</p>}
+            {recovery && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Pick something you'll remember · minimum 6 characters.</p>}
             {mode === "up" && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">The first account created becomes the studio owner.</p>}
             {mode === "reset" && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">We'll email you a secure link to set a new password.</p>}
           </div>

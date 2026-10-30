@@ -10,7 +10,7 @@ import { logActivity, useRemove, useRows, useSave } from "@/lib/db";
 import { fmtDate, money } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/projects")({
-  head: () => ({ meta: [{ title: "Projects — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Projects · Nine3 Studio" }] }),
   component: Projects,
 });
 
@@ -85,10 +85,10 @@ function Projects() {
                 <option value="">Choose a project template…</option>
                 {templates.map((t) => <option key={t.id} value={t.id}>{t.name}{t.items?.length ? ` (${t.items.length} milestones)` : ""}</option>)}
               </select>
-              {templates.length === 0 && <p className="text-xs text-muted-foreground">No project templates yet — create one under Templates first.</p>}
+              {templates.length === 0 && <p className="text-xs text-muted-foreground">No project templates yet · create one under Templates first.</p>}
             </div>
-            <div className="space-y-1.5"><Label>Project name</Label><Input required value={fromTpl.name} onChange={(e) => setFromTpl({ ...fromTpl, name: e.target.value })} placeholder="e.g. OSG Home Solutions — Brand refresh" /></div>
-            <div className="space-y-1.5"><Label>Client</Label><select className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm" value={fromTpl.client_id} onChange={(e) => setFromTpl({ ...fromTpl, client_id: e.target.value })}><option value="">—</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            <div className="space-y-1.5"><Label>Project name</Label><Input required value={fromTpl.name} onChange={(e) => setFromTpl({ ...fromTpl, name: e.target.value })} placeholder="e.g. OSG Home Solutions · Brand refresh" /></div>
+            <div className="space-y-1.5"><Label>Client</Label><select className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm" value={fromTpl.client_id} onChange={(e) => setFromTpl({ ...fromTpl, client_id: e.target.value })}><option value="">·</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
             <div className="space-y-1.5"><Label>Due date</Label><Input type="date" value={fromTpl.due_date} onChange={(e) => setFromTpl({ ...fromTpl, due_date: e.target.value })} /></div>
             <Button type="submit" className="w-full">Create project</Button>
           </form>

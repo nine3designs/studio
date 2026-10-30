@@ -5,7 +5,7 @@ import { useRows } from "@/lib/db";
 import { effectiveStatus, fmtDate, invoiceTotals, money, portalLink } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Dashboard · Nine3 Studio" }] }),
   component: Dashboard,
 });
 
@@ -33,7 +33,7 @@ function Dashboard() {
   const next = fixtures.find((f) => f.match_date >= today);
   const nextClient = next ? clients.find((c) => c.id === next.client_id) : undefined;
   const sportsClients = clients.filter((c) => c.portal_type === "sports" && c.portal_enabled);
-  const kits = (nextClient?.home_kit ?? {}) as { primary?: string; secondary?: string; accent?: string };
+  const kits = ((next?.venue === "home" ? nextClient?.home_kit : nextClient?.away_kit) ?? {}) as { primary?: string; secondary?: string; accent?: string };
   const recentIds: string[] = (() => { try { return JSON.parse(localStorage.getItem("nine3-recent-clients") ?? "[]"); } catch { return []; } })();
   const recent = recentIds.map((rid) => clients.find((c) => c.id === rid)).filter(Boolean);
 
@@ -48,7 +48,7 @@ function Dashboard() {
               <CalendarDays className="h-8 w-8" />
             </div>
             <div className="min-w-60 flex-1">
-              <p className="eyebrow opacity-70">Next match — {nextClient.name}</p>
+              <p className="eyebrow" style={{ color: "#DCE9E5" }}>Next match · {nextClient.name}</p>
               <h2 className="font-heading text-3xl font-semibold">
                 {next.venue === "home" ? "vs" : "away at"} {next.opponent}
               </h2>
@@ -149,7 +149,7 @@ function Dashboard() {
             <ul className="divide-y">
               {activity.slice(0, 10).map((a) => (
                 <li key={a.id} className="flex justify-between gap-4 py-2 text-sm">
-                  <span><span className="font-medium">{a.clients?.name ?? "Studio"}</span> — {a.message}</span>
+                  <span><span className="font-medium">{a.clients?.name ?? "Studio"}</span> · {a.message}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">{fmtDate(a.created_at)}</span>
                 </li>
               ))}

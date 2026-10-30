@@ -8,7 +8,7 @@ import { useRows, useSave } from "@/lib/db";
 import { portalLink } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/clients/")({
-  head: () => ({ meta: [{ title: "Clients — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Clients · Nine3 Studio" }] }),
   component: Clients,
 });
 
@@ -38,7 +38,7 @@ function Clients() {
           }} />
         </FormDialog>
       } />
-      {clients.length === 0 ? <Empty>No clients yet — add your first one.</Empty> : (
+      {clients.length === 0 ? <Empty>No clients yet · add your first one.</Empty> : (
         <div className="overflow-x-auto rounded-md border bg-card">
           <table className="w-full text-sm">
             <thead className="bg-cream text-left text-xs uppercase tracking-wider text-muted-foreground">

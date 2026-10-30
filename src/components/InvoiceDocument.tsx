@@ -25,7 +25,7 @@ export function InvoiceDocument({ inv }: { inv: InvoiceDoc }) {
       <div className="mt-8 grid grid-cols-2 gap-6 text-sm">
         <div>
           <p className="eyebrow mb-1">Billed to</p>
-          <p className="font-semibold">{inv.client?.name ?? "—"}</p>
+          <p className="font-semibold">{inv.client?.name ?? "·"}</p>
           {inv.client?.company && <p>{inv.client.company}</p>}
           {inv.client?.email && <p className="text-muted-foreground">{inv.client.email}</p>}
         </div>

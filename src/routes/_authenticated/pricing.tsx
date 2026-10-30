@@ -9,7 +9,7 @@ import { useRemove, useRows, useSave } from "@/lib/db";
 import { money } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/pricing")({
-  head: () => ({ meta: [{ title: "Pricing — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Pricing · Nine3 Studio" }] }),
   component: Pricing,
 });
 
@@ -34,7 +34,7 @@ function Pricing() {
 
   return (
     <div>
-      <PageHeader eyebrow="Sales" title="Pricing" subtitle="Your packages — pull them into proposals with one click." action={<Button onClick={() => open({ billing: "one-off", active: true })}><Plus className="h-4 w-4" /> New package</Button>} />
+      <PageHeader eyebrow="Sales" title="Pricing" subtitle="Your packages · pull them into proposals with one click." action={<Button onClick={() => open({ billing: "one-off", active: true })}><Plus className="h-4 w-4" /> New package</Button>} />
       <FormDialog title={editing?.id ? "Edit package" : "New package"} open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         {editing && <>
           <div className="mb-4 space-y-1.5"><Label>What's included (one per line)</Label><Textarea rows={5} value={features} onChange={(e) => setFeatures(e.target.value)} /></div>

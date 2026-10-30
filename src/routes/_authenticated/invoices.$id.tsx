@@ -10,7 +10,7 @@ import { logActivity, useRemove, useRows, useSave } from "@/lib/db";
 import type { LineItem } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/invoices/$id")({
-  head: () => ({ meta: [{ title: "Invoice — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Invoice · Nine3 Studio" }] }),
   component: InvoiceEditor,
 });
 
@@ -59,7 +59,7 @@ function InvoiceEditor() {
             <div className="space-y-1.5"><Label>Number</Label><Input value={v.number} onChange={(e) => setV({ ...v, number: e.target.value })} /></div>
             <div className="space-y-1.5"><Label>Status</Label><select className={sel} value={v.status} onChange={(e) => setV({ ...v, status: e.target.value })}>{["draft", "sent", "paid", "void"].map((s) => <option key={s}>{s}</option>)}</select></div>
           </div>
-          <div className="space-y-1.5"><Label>Client</Label><select className={sel} value={v.client_id ?? ""} onChange={(e) => setV({ ...v, client_id: e.target.value || null })}><option value="">—</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+          <div className="space-y-1.5"><Label>Client</Label><select className={sel} value={v.client_id ?? ""} onChange={(e) => setV({ ...v, client_id: e.target.value || null })}><option value="">·</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5"><Label>Issued</Label><Input type="date" value={v.issue_date ?? ""} onChange={(e) => setV({ ...v, issue_date: e.target.value })} /></div>
             <div className="space-y-1.5"><Label>Due</Label><Input type="date" value={v.due_date ?? ""} onChange={(e) => setV({ ...v, due_date: e.target.value || null })} /></div>

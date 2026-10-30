@@ -10,7 +10,7 @@ import { Empty, FormDialog, PageHeader } from "@/components/common";
 import { useRemove, useRows, useSave } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/templates")({
-  head: () => ({ meta: [{ title: "Templates — Nine3 Studio" }] }),
+  head: () => ({ meta: [{ title: "Templates · Nine3 Studio" }] }),
   component: Templates,
 });
 

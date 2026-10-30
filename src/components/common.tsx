@@ -86,7 +86,7 @@ export function QuickForm({ fields, initial = {}, onSubmit, submitLabel = "Save"
               required={f.required}
               onChange={(e) => setV({ ...v, [f.name]: e.target.value || null })}
             >
-              {!f.required && <option value="">—</option>}
+              {!f.required && <option value="">·</option>}
               {f.options?.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}

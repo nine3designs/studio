@@ -6,9 +6,9 @@ import { LOGO_URL } from "@/lib/format";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Nine3 Designs — Studio & Client Portal" },
+      { title: "Nine3 Designs · Studio & Client Portal" },
       { name: "description", content: "Sign in to the Nine3 Designs studio workspace or your client portal." },
-      { property: "og:title", content: "Nine3 Designs — Studio & Client Portal" },
+      { property: "og:title", content: "Nine3 Designs · Studio & Client Portal" },
       { property: "og:description", content: "Sign in to the Nine3 Designs studio workspace or your client portal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
