@@ -79,7 +79,8 @@ type Action =
   | { type: "recordUpload"; path: string; fileName: string; title?: string; kind?: string }
   | { type: "bookCall"; date: string; time?: string; kind?: string; name?: string; notes?: string }
   | { type: "questionnaire"; answers?: Record<string, string> }
-  | { type: "favourite"; id: string; on: boolean };
+  | { type: "favourite"; id: string; on: boolean }
+  | { type: "fixtureSheet"; id: string; text?: string; path?: string; fileName?: string };
 
 export const portalAction = createServerFn({ method: "POST" })
   .inputValidator((d: Access & { action: Action }) => d)
@@ -158,6 +159,27 @@ export const portalAction = createServerFn({ method: "POST" })
       if (a.on) list.add(a.id); else list.delete(a.id);
       const { error } = await admin.from("clients").update({ portal_prefs: { ...prefs, favourites: [...list] } }).eq("id", cid);
       if (error) throw new Error("Favourites aren't ready yet · please check back soon.");
+      return { ok: true };
+    }
+    if (a.type === "fixtureSheet") {
+      const { data: fx } = await admin.from("sports_fixtures").select("id, match_date, graphics").eq("id", a.id).eq("client_id", cid).maybeSingle();
+      if (!fx) throw new Error("Fixture not found");
+      const gfx = Array.isArray(fx.graphics) ? [...(fx.graphics as Any[])] : [];
+      const hasText = !!a.text?.trim();
+      const hasFile = !!a.path;
+      if (!hasText && !hasFile) throw new Error("Add some info or a file first.");
+      const entry: Any = { name: "Team sheet", done: true };
+      if (hasText) entry.text = a.text!.slice(0, 4000);
+      if (hasFile) {
+        if (!a.path!.startsWith(`${cid}/client-`)) throw new Error("Invalid upload");
+        entry.path = a.path;
+        entry.fileName = (a.fileName || "team-sheet").slice(0, 200);
+      }
+      const idx = gfx.findIndex((x: Any) => x && x.name === "Team sheet");
+      if (idx >= 0) gfx[idx] = { ...gfx[idx], ...entry }; else gfx.push(entry);
+      const { error } = await admin.from("sports_fixtures").update({ graphics: gfx }).eq("id", a.id).eq("client_id", cid);
+      if (error) throw new Error("Could not save the team sheet.");
+      await log(`Sent team sheet info for the fixture on ${fx.match_date}`);
       return { ok: true };
     }
     throw new Error("Unknown action");
