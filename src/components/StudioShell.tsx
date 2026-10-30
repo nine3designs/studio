@@ -62,7 +62,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col md:flex-row">
       {/* Mobile top bar */}
       <div className="no-print flex items-center justify-between bg-sidebar p-4 text-sidebar-foreground md:hidden">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="h-12" />
+        <img src={LOGO_URL} alt="Nine3 Designs" className="h-16" />
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="border-sidebar-accent bg-transparent text-sidebar-foreground hover:bg-sidebar-accent">
@@ -82,7 +82,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
       {/* Desktop sidebar */}
       <aside className="no-print hidden bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:block md:h-screen md:w-64 md:shrink-0">
         <div className="p-6">
-          <img src={LOGO_URL} alt="Nine3 Designs" className="h-20" />
+          <img src={LOGO_URL} alt="Nine3 Designs" className="h-60" />
           <p className="mt-3 font-script text-xs font-semibold uppercase tracking-[0.3em] text-sidebar-primary">Studio</p>
         </div>
         <button onClick={() => setPaletteOpen(true)} className="mx-3 mb-2 flex w-[calc(100%-1.5rem)] items-center gap-3 rounded-sm border border-sidebar-accent px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent">
