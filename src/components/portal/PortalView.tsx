@@ -402,7 +402,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const upcoming = p.fixtures.filter((f: Any) => f.match_date >= today);
   const past = p.fixtures.filter((f: Any) => f.match_date < today).reverse();
   const templates = p.deliverables.filter((d: Any) => d.kind === "template");
-  const resources = p.deliverables.filter((d: Any) => d.uploaded_by === "client");
+  const resources = p.deliverables.filter((d: Any) => d.uploaded_by === "client" && d.kind !== "photo");
   const archive = p.deliverables.filter((d: Any) => d.kind === "completed" || d.kind === "deliverable" || (d.kind === "proof" && d.status === "approved"));
   const proofs = p.deliverables.filter((d: Any) => d.kind === "proof" && d.status !== "approved");
   const photos = p.deliverables.filter((d: Any) => d.kind === "photo");
@@ -418,7 +418,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   }
 
   const [openFx, setOpenFx] = useState<Any | null>(null);
-  const [tab, setTab] = useState("fixtures");
+  const [tab, setTab] = useState(() => (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab")) || "fixtures");
   const [showAllFx, setShowAllFx] = useState(false);
   const [reqOpen, setReqOpen] = useState(false);
   const next = upcoming[0];
