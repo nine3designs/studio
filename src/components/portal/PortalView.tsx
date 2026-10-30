@@ -376,7 +376,6 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
           </table>
         )}
       </Section>
-      <Section title="Book a call or design review"><BookCall token={token} compact /></Section>
       <Section title="Help & FAQs"><HelpCentre /></Section>
     </div>
   );
