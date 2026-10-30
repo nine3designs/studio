@@ -136,3 +136,30 @@
   outline-offset: 2px;
   border-radius: 2px;
 }
+
+/* ---- Premium studio pass: soft depth, pill nav, refined focus ---- */
+:root { --radius: 0.65rem; }
+body {
+  background-image:
+    radial-gradient(1100px 550px at 85% -10%, rgba(23,75,80,.09), transparent 60%),
+    radial-gradient(900px 520px at -10% 110%, rgba(23,75,80,.06), transparent 55%);
+  background-attachment: fixed;
+}
+h1, h2, h3 { letter-spacing: -0.01em; }
+.bg-card {
+  box-shadow: 0 1px 2px rgba(23,75,80,.05), 0 10px 30px rgba(23,75,80,.06);
+  border-color: rgba(23,75,80,.09) !important;
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.bg-card:hover { box-shadow: 0 2px 4px rgba(23,75,80,.05), 0 14px 36px rgba(23,75,80,.09); }
+.bg-sidebar { background-image: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 32%); }
+.bg-sidebar a, .bg-sidebar button { border-radius: 999px !important; transition: background .15s ease, padding-left .15s ease; }
+.bg-sidebar .bg-sidebar-accent { background: rgba(255,255,255,.1) !important; }
+.bg-primary { box-shadow: 0 4px 14px rgba(23,75,80,.28); }
+button:active { transform: scale(.98); }
+input, textarea, select { transition: border-color .15s ease, box-shadow .15s ease; }
+input:focus, textarea:focus, select:focus { box-shadow: 0 0 0 3px rgba(23,75,80,.12); border-color: #174B50; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(23,75,80,.25); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(23,75,80,.4); border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-track { background: transparent; }
