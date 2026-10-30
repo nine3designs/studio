@@ -361,7 +361,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
           </p>
           <div className="mt-3 flex items-center gap-3">
             {(["primary", "secondary"] as const).filter((c) => nextKit?.[c]).map((c) => (
-              <span key={c} className="h-6 w-6 rounded-sm border border-white/30" style={{ background: nextKit[c] }} title={nextKit[c]} />
+              <span key={c} className="h-6 w-6 rounded-sm border-2 border-white/70 shadow-sm" style={{ background: nextKit[c] }} title={nextKit[c]} />
             ))}
             <span className="text-xs opacity-80">{next.venue === "home" ? "Home colours" : "Away colours"}</span>
           </div>
