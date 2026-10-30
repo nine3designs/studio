@@ -69,7 +69,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="bg-sidebar text-sidebar-foreground">
+          <SheetContent side="left" className="h-full bg-sidebar text-sidebar-foreground">
             <SheetHeader>
               <SheetTitle className="text-left text-sidebar-foreground">
                 <img src={LOGO_URL} alt="Nine3 Designs" className="h-10" />
