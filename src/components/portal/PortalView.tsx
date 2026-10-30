@@ -58,7 +58,7 @@ function MobileTabs({ tabs }: { tabs: { v: string; l: string }[] }) {
 
 function Shell({ children, name, tone }: { children: ReactNode; name?: string; tone?: "sports" }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background${tone === "sports" ? " sports" : ""}`}>
       <style>{`
         .portal-fade { animation: portalFade .45s ease both; }
         @keyframes portalFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -69,6 +69,41 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         @keyframes confettiFall { 0% { transform: translateY(-4vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(108vh) rotate(720deg); opacity: 0; } }
         .portal-logo-load { animation: logoPulse 1.6s ease-in-out infinite; }
         @keyframes logoPulse { 0%,100% { opacity: .8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+      /* ---- sports premium theme (glass / dark) ---- */
+        .sports { background: linear-gradient(180deg, #0A2140 0%, #081B33 45%, #050F1F 100%) !important; color: #EAF2FF; }
+        .sports::before { content: ""; position: fixed; inset: 0; pointer-events: none; background:
+          radial-gradient(620px 420px at 12% -2%, rgba(30,111,224,.28), transparent 62%),
+          radial-gradient(520px 360px at 88% 6%, rgba(255,213,32,.09), transparent 60%),
+          radial-gradient(760px 520px at 50% 108%, rgba(30,111,224,.14), transparent 62%); z-index: 0; }
+        .sports main, .sports footer, .sports header { position: relative; z-index: 1; }
+        .sports header { background: transparent !important; }
+        .sports header img { filter: drop-shadow(0 6px 24px rgba(0,0,0,.45)); }
+        .sports header p { color: rgba(234,242,255,.6); }
+        .sports footer { color: rgba(234,242,255,.4); }
+        .sports footer a { color: rgba(234,242,255,.7); }
+        .sports .bg-card { background: rgba(255,255,255,.055) !important; border-color: rgba(255,255,255,.12) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 34px rgba(0,0,0,.28); }
+        .sports .rounded-md, .sports .rounded-lg { border-radius: 1.1rem; }
+        .sports h1, .sports h2, .sports h3 { color: #fff; }
+        .sports .text-primary-deep, .sports .text-foreground { color: #EAF2FF !important; }
+        .sports .text-muted-foreground { color: rgba(234,242,255,.55) !important; }
+        .sports .eyebrow { color: #FFD520 !important; }
+        .sports .border-dashed { border-color: rgba(255,255,255,.25) !important; }
+        .sports-hero { position: relative; overflow: hidden; background: linear-gradient(135deg, rgba(30,111,224,.5), rgba(10,53,110,.55)) !important; border: 1px solid rgba(255,255,255,.14) !important; border-radius: 1.5rem !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 24px 64px rgba(0,0,0,.4); }
+        .sports-hero::after { content: ""; position: absolute; right: -70px; top: -70px; width: 280px; height: 280px; background: radial-gradient(circle, rgba(255,213,32,.28), transparent 70%); border-radius: 50%; pointer-events: none; }
+        .sports [role="progressbar"] { background: rgba(255,255,255,.14) !important; border-radius: 999px; }
+        .sports [role="progressbar"] > * { background: #FFD520 !important; }
+        .sports [role="tablist"] { display: inline-flex; gap: 4px; background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.12) !important; border-radius: 999px !important; padding: 6px !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 34px rgba(0,0,0,.28); }
+        .sports [role="tab"] { border-radius: 999px !important; color: rgba(234,242,255,.6) !important; font-weight: 600; transition: color .2s, background .2s; }
+        .sports [role="tab"]:hover { color: #fff !important; }
+        .sports [role="tab"][data-state="active"] { background: #fff !important; color: #0A2547 !important; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+        .sports li.rounded-md { transition: transform .25s ease, background .25s ease, border-color .25s ease; }
+        .sports li.rounded-md:hover { background: rgba(255,255,255,.09) !important; transform: translateY(-2px); border-color: rgba(255,255,255,.22) !important; }
+        .sports .bg-muted { background: rgba(255,255,255,.08) !important; }
+        .sports .text-success { color: #6EE7A0 !important; }
+        .sports .bg-success\/15 { background: rgba(110,231,160,.12) !important; }
+        .sports .text-destructive { color: #FF8A8A !important; }
+        .sports .bg-destructive\/10 { background: rgba(255,138,138,.12) !important; }
+        .sports input[type="checkbox"] { accent-color: #FFD520; }
       `}</style>
       <header className="bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "#0E55AF" } : undefined}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-7">
@@ -351,7 +386,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   return (
     <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Raleway', ui-sans-serif, sans-serif" } as Any}>
       {next && (
-        <section className="portal-fade overflow-hidden rounded-md p-6 text-white md:p-8" style={{ background: "#0E55AF" }}>
+        <section className="sports-hero portal-fade overflow-hidden rounded-md p-6 text-white md:p-8">
           <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {fmtDate(next.match_date)}</p>
           <h2 className="font-heading text-3xl font-semibold">
             {next.venue === "home" ? "vs" : "away at"} {next.opponent}
