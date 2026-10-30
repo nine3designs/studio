@@ -26,6 +26,7 @@ function InvoiceEditor() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [v, setV] = useState<any>(null);
   useEffect(() => { if (inv) setV(inv); }, [inv]);
+  useEffect(() => { if (v?.number) document.title = `Nine3 invoice ${v.number}`; }, [v?.number]);
   if (!v) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   const items: LineItem[] = v.items ?? [];

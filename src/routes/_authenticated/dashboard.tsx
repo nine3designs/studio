@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarDays, ExternalLink, PartyPopper, Palette } from "lucide-react";
+import { CalendarDays, Clock, ExternalLink, PartyPopper, Palette } from "lucide-react";
 import { Empty, PageHeader, StatCard, StatusBadge } from "@/components/common";
 import { useRows } from "@/lib/db";
 import { effectiveStatus, fmtDate, invoiceTotals, money, portalLink } from "@/lib/format";
@@ -34,6 +34,8 @@ function Dashboard() {
   const nextClient = next ? clients.find((c) => c.id === next.client_id) : undefined;
   const sportsClients = clients.filter((c) => c.portal_type === "sports" && c.portal_enabled);
   const kits = (nextClient?.home_kit ?? {}) as { primary?: string; secondary?: string; accent?: string };
+  const recentIds: string[] = (() => { try { return JSON.parse(localStorage.getItem("nine3-recent-clients") ?? "[]"); } catch { return []; } })();
+  const recent = recentIds.map((rid) => clients.find((c) => c.id === rid)).filter(Boolean);
 
   return (
     <div>
@@ -93,6 +95,17 @@ function Dashboard() {
                   <Link to="/tasks" className="rounded-md border px-3 py-1.5 text-xs font-medium text-primary-deep transition-colors hover:bg-accent">Tasks</Link>
                 </div>
               </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {recent.length > 0 && (
+        <section className="mb-8">
+          <div className="mb-2 flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /><h2 className="font-semibold text-primary-deep">Recently viewed</h2></div>
+          <div className="flex flex-wrap gap-2">
+            {recent.map((c) => (
+              <Link key={c!.id} to="/clients/$id" params={{ id: c!.id }} className="rounded-full border bg-card px-4 py-1.5 text-sm transition-colors hover:bg-accent">{c!.name}</Link>
             ))}
           </div>
         </section>

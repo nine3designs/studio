@@ -77,6 +77,9 @@ function Shell({ children, name }: { children: ReactNode; name?: string }) {
         {name && <div className="mx-auto max-w-5xl px-6 pb-8"><p className="text-sm opacity-70">Welcome,</p><h1 className="font-heading text-3xl font-semibold">{name}</h1></div>}
       </header>
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
+      <footer className="pb-8 text-center text-xs text-muted-foreground/80">
+        Powered by <a href="https://nine3designs.co.uk" target="_blank" rel="noreferrer" className="hover:text-primary">Nine3 Designs</a> · Your Vision. Our Design.
+      </footer>
     </div>
   );
 }
@@ -192,6 +195,14 @@ function ProofCard({ f, token }: { f: Any; token: string | null }) {
       <div className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-2"><div><p className="font-medium">{f.title}</p><p className="text-xs text-muted-foreground">{fmtDate(f.created_at)}</p></div><StatusBadge status={f.status} /></div>
         {f.feedback && <p className="whitespace-pre-wrap rounded bg-cream p-2 text-xs">Your notes: {f.feedback}</p>}
+        {(f.history ?? []).length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-medium">Earlier versions:</span>
+            {(f.history as Any[]).map((h, i) => (
+              <a key={i} href={h.url ?? "#"} target="_blank" rel="noreferrer" className="rounded-full border px-2 py-0.5 transition-colors hover:border-primary hover:text-primary">v{i + 1}{h.at ? ` · ${fmtDate(h.at)}` : ""}</a>
+            ))}
+          </div>
+        )}
         {f.status === "pending" && (revising ? (
           <div className="space-y-2">
             <Textarea rows={3} placeholder="What would you like changed?" value={fb} onChange={(e) => setFb(e.target.value)} />
@@ -417,7 +428,7 @@ function Fixture({ f }: { f: Any }) {
 function PortalLoader() {
   return (
     <div className="flex flex-col items-center py-24 text-center">
-      <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-20" />
+      <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-32 md:h-40" />
       <p className="mt-6 text-sm text-muted-foreground">Preparing your portal…</p>
     </div>
   );
@@ -565,9 +576,34 @@ const Q_FIELDS: { key: string; label: string }[] = [
 function QuestionnaireCard({ p, token }: { p: Any; token: string | null }) {
   const act = useAct(token);
   const [open, setOpen] = useState(false);
-  const [v, setV] = useState<Record<string, string>>({});
+  const draftKey = `nine3-q-draft-${p.client?.id ?? "anon"}`;
+  const [v, setV] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem(draftKey) ?? "{}"); } catch { return {}; }
+  });
+  const [savedTick, setSavedTick] = useState(false);
   const [busy, setBusy] = useState(false);
   const done = (p.activity ?? []).some((a: Any) => /questionnaire/i.test(a.message ?? ""));
+
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => {
+      if (Object.keys(v).length) {
+        try { localStorage.setItem(draftKey, JSON.stringify(v)); } catch { /* private mode */ }
+        setSavedTick(true);
+      }
+    }, 700);
+    return () => clearTimeout(t);
+  }, [v, open, draftKey]);
+
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: BeforeUnloadEvent) => {
+      if (Object.values(v).some((x) => x?.trim())) { e.preventDefault(); e.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", h);
+    return () => window.removeEventListener("beforeunload", h);
+  }, [open, v]);
+
   return (
     <Section title="Brand questionnaire">
       {done ? (
@@ -582,7 +618,12 @@ function QuestionnaireCard({ p, token }: { p: Any; token: string | null }) {
           {Q_FIELDS.map((f) => (
             <div key={f.key} className="space-y-1"><Label className="text-xs">{f.label}</Label><Textarea rows={2} value={v[f.key] ?? ""} onChange={(e) => setV({ ...v, [f.key]: e.target.value })} /></div>
           ))}
-          <div className="flex gap-2"><Button type="submit" disabled={busy}>{busy ? "Sending…" : "Send answers"}</Button><Button type="button" variant="ghost" onClick={() => setOpen(false)}>Later</Button></div>
+          <div className="flex items-center gap-2">
+            <Button type="submit" disabled={busy}>{busy ? "Sending…" : "Send answers"}</Button>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Later</Button>
+            {savedTick && <span className="ml-auto flex items-center gap-1 text-xs text-success"><Check className="h-3.5 w-3.5" /> All changes saved</span>}
+          </div>
+          <p className="text-xs text-muted-foreground">Your answers save automatically as you type — come back any time.</p>
         </form>
       ) : (
         <>

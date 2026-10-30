@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Copy, ExternalLink, RefreshCw, Trash2, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Copy, ExternalLink, GitBranch, RefreshCw, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,41 @@ export const Route = createFileRoute("/_authenticated/clients/$id")({
 });
 
 const sel = "h-9 rounded-md border border-input bg-transparent px-3 text-sm";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function VersionButton({ f, clientId }: { f: any; clientId: string }) {
+  const save = useSave("deliverables");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ref = useRef<any>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <>
+      <input ref={ref} type="file" className="hidden" onChange={async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setBusy(true);
+        try {
+          const path = await uploadFile(clientId, file);
+          await save.mutateAsync({
+            id: f.id,
+            file_path: path,
+            file_name: file.name,
+            status: "pending",
+            feedback: null,
+            history: [...(f.history ?? []), { path: f.file_path, name: f.file_name, at: (f.updated_at ?? f.created_at ?? "").slice(0, 10) }],
+          });
+          await logActivity(clientId, `New version shared: ${f.title}`);
+          toast.success("New version shared with client");
+        } catch (err) {
+          toast.error((err as Error).message);
+        }
+        setBusy(false);
+        if (ref.current) ref.current.value = "";
+      }} />
+      <button disabled={busy} title="Share a new version (keeps the old one in history)" onClick={() => ref.current?.click()} className="text-muted-foreground hover:text-primary"><GitBranch className="h-4 w-4" /></button>
+    </>
+  );
+}
 
 function ClientDetail() {
   const { id } = Route.useParams();
@@ -204,7 +239,13 @@ function Files({ clientId }: { clientId: string }) {
                   <td className="p-3 capitalize">{f.uploaded_by}</td>
                   <td className="p-3"><StatusBadge status={f.status} /></td>
                   <td className="max-w-xs whitespace-pre-wrap p-3 text-xs">{f.feedback}</td>
-                  <td className="p-3 text-right"><button className="text-muted-foreground hover:text-destructive" onClick={() => confirm("Delete?") && remove.mutate(f.id)}><Trash2 className="h-4 w-4" /></button></td>
+                  <td className="p-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      {f.kind === "proof" && f.file_path && <VersionButton f={f} clientId={clientId} />}
+                      {(f.history ?? []).length > 0 && <span className="text-xs text-muted-foreground">+{(f.history ?? []).length} old</span>}
+                      <button className="text-muted-foreground hover:text-destructive" onClick={() => confirm("Delete?") && remove.mutate(f.id)}><Trash2 className="h-4 w-4" /></button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

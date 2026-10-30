@@ -42,7 +42,13 @@ export const getPortal = createServerFn({ method: "POST" })
       let url: string | null = null;
       if (f.file_path && (f.file_path.startsWith("http") || f.file_path.startsWith("data:"))) url = f.file_path;
       else if (f.file_path) url = (await admin.storage.from("files").createSignedUrl(f.file_path, 3600)).data?.signedUrl ?? null;
-      return { ...f, url };
+      const history = await Promise.all((((f as Any).history as Any[]) ?? []).map(async (h) => {
+        let hurl: string | null = null;
+        if (h?.path && (h.path.startsWith("http") || h.path.startsWith("data:"))) hurl = h.path;
+        else if (h?.path) hurl = (await admin.storage.from("files").createSignedUrl(h.path, 3600)).data?.signedUrl ?? null;
+        return { ...h, url: hurl };
+      }));
+      return { ...f, url, history };
     }));
     return {
       client: { id: cid, name: client.name, company: client.company, portal_type: client.portal_type, home_kit: client.home_kit, away_kit: client.away_kit, monthly_fee: client.monthly_fee, notes: client.notes, portal_prefs: (client as Any).portal_prefs ?? null },

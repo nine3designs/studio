@@ -23,7 +23,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"in" | "up">("in");
+  const [mode, setMode] = useState<"in" | "up" | "reset">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -31,7 +31,13 @@ function AuthPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    if (mode === "in") {
+    if (mode === "reset") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/auth" });
+      setBusy(false);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Reset link sent — check your inbox.");
+      setMode("in");
+    } else if (mode === "in") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setBusy(false);
       if (error) { toast.error(error.message); return; }
@@ -48,22 +54,27 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen md:grid-cols-2">
       <div className="hidden flex-col justify-between bg-primary-deep p-12 md:flex">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="h-16 self-start" />
+        <img src={LOGO_URL} alt="Nine3 Designs" className="h-28 self-start md:h-36" />
         <p className="font-script text-3xl font-semibold tracking-wide uppercase text-primary-soft">Studio</p>
       </div>
       <div className="flex items-center justify-center p-8">
         <form onSubmit={submit} className="w-full max-w-sm space-y-5">
           <div>
             <p className="eyebrow">Nine3 Designs</p>
-            <h1 className="mt-2 text-3xl font-light text-primary-deep">{mode === "in" ? "Sign in" : "Create studio account"}</h1>
+            <h1 className="mt-2 text-3xl font-light text-primary-deep">{mode === "in" ? "Sign in" : mode === "up" ? "Create studio account" : "Reset your password"}</h1>
             {mode === "up" && <p className="mt-2 text-xs text-muted-foreground">The first account created becomes the studio owner.</p>}
+            {mode === "reset" && <p className="mt-2 text-xs text-muted-foreground">We'll email you a secure link to set a new password.</p>}
           </div>
           <div className="space-y-1.5"><Label>Email</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
-          <Button type="submit" disabled={busy} className="w-full">{mode === "in" ? "Sign in" : "Create account"}</Button>
-          <button type="button" className="w-full text-center text-sm text-muted-foreground hover:text-primary" onClick={() => setMode(mode === "in" ? "up" : "in")}>
-            {mode === "in" ? "First time? Create the studio account" : "Already have an account? Sign in"}
-          </button>
+          {mode !== "reset" && <div className="space-y-1.5"><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>}
+          <Button type="submit" disabled={busy} className="w-full">{mode === "in" ? "Sign in" : mode === "up" ? "Create account" : "Email me a reset link"}</Button>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <button type="button" className="hover:text-primary" onClick={() => setMode(mode === "in" ? "up" : "in")}>
+              {mode === "in" ? "First time? Create the studio account" : "Already have an account? Sign in"}
+            </button>
+            {mode === "in" && <button type="button" className="hover:text-primary" onClick={() => setMode("reset")}>Forgot password?</button>}
+            {mode !== "in" && <button type="button" className="hover:text-primary" onClick={() => setMode("in")}>Back</button>}
+          </div>
         </form>
       </div>
     </div>

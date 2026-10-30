@@ -129,3 +129,10 @@
   .print-area { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; border: none !important; }
   .no-print { display: none !important; }
 }
+
+/* Keyboard accessibility: visible, on-brand focus states */
+:focus-visible {
+  outline: 2px solid #174B50;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
