@@ -1,10 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ChevronDown, Download, FileText, Menu, Upload } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Heart, HelpCircle, Menu, PartyPopper, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +20,7 @@ type Any = any;
 export function PortalView({ token }: { token: string | null }) {
   const fetchPortal = useServerFn(getPortal);
   const q = useQuery({ queryKey: ["portal", token], queryFn: () => fetchPortal({ data: { token } }), retry: false });
-  if (q.isLoading) return <Shell><p className="py-20 text-center text-sm text-muted-foreground">Loading your portal…</p></Shell>;
+  if (q.isLoading) return <Shell><PortalLoader /></Shell>;
   if (q.error) return <Shell><Empty>{(q.error as Error).message}</Empty></Shell>;
   const p = q.data!;
   return (
@@ -58,6 +59,17 @@ function MobileTabs({ tabs }: { tabs: { v: string; l: string }[] }) {
 function Shell({ children, name }: { children: ReactNode; name?: string }) {
   return (
     <div className="min-h-screen bg-background">
+      <style>{`
+        .portal-fade { animation: portalFade .45s ease both; }
+        @keyframes portalFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        [role="progressbar"] > * { transition: transform .9s cubic-bezier(.2,.8,.2,1); }
+        .pop-in { animation: popIn .5s ease both; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(.92); } 60% { transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
+        .confetti-piece { position: fixed; top: -6vh; width: 8px; height: 14px; border-radius: 2px; z-index: 60; animation: confettiFall linear forwards; }
+        @keyframes confettiFall { 0% { transform: translateY(-4vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(108vh) rotate(720deg); opacity: 0; } }
+        .portal-logo-load { animation: logoPulse 1.6s ease-in-out infinite; }
+        @keyframes logoPulse { 0%,100% { opacity: .8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+      `}</style>
       <header className="bg-primary-deep text-primary-foreground">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-6">
           <img src={LOGO_URL} alt="Nine3 Designs" className="h-16 md:h-20" />
@@ -98,6 +110,8 @@ function StandardPortal({ p, token }: { p: Any; token: string | null }) {
         { v: "files", l: "Files" },
         { v: "invoices", l: "Invoices" },
         { v: "documents", l: "Proposals & contracts" },
+        { v: "bookcall", l: "Book a call" },
+        { v: "help", l: "Help" },
       ]} />
       <TabsList className="mb-6 hidden flex-wrap md:flex">
         <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -105,9 +119,14 @@ function StandardPortal({ p, token }: { p: Any; token: string | null }) {
         <TabsTrigger value="files">Files</TabsTrigger>
         <TabsTrigger value="invoices">Invoices</TabsTrigger>
         <TabsTrigger value="documents">Proposals & contracts</TabsTrigger>
+        <TabsTrigger value="bookcall"><CalendarDays className="h-4 w-4" /> Book a call</TabsTrigger>
+        <TabsTrigger value="help"><HelpCircle className="h-4 w-4" /> Help</TabsTrigger>
       </TabsList>
       <TabsContent value="overview" className="grid gap-6 md:grid-cols-2">
+        <div className="md:col-span-2 portal-fade"><CompletionBanner p={p} token={token} /></div>
+        <div className="md:col-span-2 portal-fade"><WhatNew p={p} token={token} /></div>
         <OnboardingList p={p} token={token} />
+        <QuestionnaireCard p={p} token={token} />
         <Section title="Project progress">
           {p.projects.length === 0 ? <Empty>No projects yet.</Empty> : p.projects.map((pr: Any) => {
             const ms = [...(pr.milestones ?? [])].sort((a: Any, b: Any) => a.position - b.position);
@@ -127,10 +146,12 @@ function StandardPortal({ p, token }: { p: Any; token: string | null }) {
       <TabsContent value="proofs"><Proofs proofs={proofs} token={token} /></TabsContent>
       <TabsContent value="files" className="space-y-6">
         <UploadBox token={token} kind="upload" label="Send us files (brand assets, copy, photos)" />
-        <FileGrid files={p.deliverables.filter((d: Any) => d.kind !== "proof")} />
+        <FavFileGrid p={p} token={token} files={p.deliverables.filter((d: Any) => d.kind !== "proof")} empty="No files yet — your final files will live here." />
       </TabsContent>
       <TabsContent value="invoices"><Invoices invoices={p.invoices} /></TabsContent>
       <TabsContent value="documents"><Documents docs={p.proposals} token={token} /></TabsContent>
+      <TabsContent value="bookcall" className="portal-fade"><BookCall token={token} /></TabsContent>
+      <TabsContent value="help" className="portal-fade"><HelpCentre /></TabsContent>
     </Tabs>
   );
 }
@@ -299,6 +320,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
         <Kit label="Home kit" k={p.client.home_kit} />
         <Kit label="Away kit" k={p.client.away_kit} />
       </div>
+      <WhatNew p={p} token={token} />
 
       {(p.tasks ?? []).length > 0 && (
         <Section title="Graphics to-do list">
@@ -339,7 +361,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
       </Section>
 
       <Section title="Completed work archive">
-        <FileGrid files={archive} empty="Finished graphics will appear here." />
+        <FavFileGrid p={p} token={token} files={archive} empty="Finished graphics will appear here." />
         {past.length > 0 && <ul className="mt-4 space-y-2">{past.map((f: Any) => <Fixture key={f.id} f={f} />)}</ul>}
       </Section>
 
@@ -354,6 +376,8 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
           </table>
         )}
       </Section>
+      <Section title="Book a call or design review"><BookCall token={token} compact /></Section>
+      <Section title="Help & FAQs"><HelpCentre /></Section>
     </div>
   );
 }
@@ -387,5 +411,208 @@ function Fixture({ f }: { f: Any }) {
         <span key={i} className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${x.done ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{x.done && <Check className="h-3 w-3" />}{x.name}</span>
       ))}</div>
     </li>
+  );
+}
+
+/* ---------------- Portal experience upgrades ---------------- */
+function PortalLoader() {
+  return (
+    <div className="flex flex-col items-center py-24 text-center">
+      <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-20" />
+      <p className="mt-6 text-sm text-muted-foreground">Preparing your portal…</p>
+    </div>
+  );
+}
+
+const CONFETTI_COLORS = ["#174B50", "#C8A96A", "#7EC8E3", "#FFD520", "#0E55AF", "#EFECE5"];
+
+function Confetti({ count = 90 }: { count?: number }) {
+  const [pieces] = useState(() => Array.from({ length: count }, (_, i) => ({
+    left: Math.random() * 100,
+    delay: Math.random() * 0.8,
+    dur: 2.2 + Math.random() * 1.6,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+  })));
+  const [gone, setGone] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setGone(true), 4500); return () => clearTimeout(t); }, []);
+  if (gone) return null;
+  return <>{pieces.map((p, i) => <span key={i} className="confetti-piece" style={{ left: `${p.left}%`, background: p.color, animationDelay: `${p.delay}s`, animationDuration: `${p.dur}s` }} />)}</>;
+}
+
+function pickTab(v: string) {
+  document.querySelector<HTMLButtonElement>(`[role="tab"][value="${v}"], [data-value="${v}"]`)?.click();
+}
+
+function CompletionBanner({ p }: { p: Any; token: string | null }) {
+  const projects = (p.projects ?? []).filter((pr: Any) => (pr.milestones ?? []).length > 0);
+  const completed = projects.filter((pr: Any) => pr.status === "completed" || (pr.milestones ?? []).every((m: Any) => m.done));
+  const [celebrate, setCelebrate] = useState(false);
+  useEffect(() => { if (completed.length > 0) setCelebrate(true); }, [completed.length]);
+  if (completed.length === 0) return null;
+  const pr = completed[0];
+  return (
+    <section className="pop-in relative overflow-hidden rounded-md border bg-primary-deep p-6 text-primary-foreground">
+      {celebrate && <Confetti />}
+      <div className="relative z-10 flex flex-wrap items-center gap-4">
+        <PartyPopper className="h-9 w-9 shrink-0" />
+        <div className="min-w-60 flex-1">
+          <p className="eyebrow opacity-70">Project complete</p>
+          <h3 className="font-heading text-2xl font-semibold">{pr.name} is wrapped!</h3>
+          <p className="mt-1 text-sm opacity-80">Everything's signed off — your final files are yours to keep. Download them below or save your favourites.</p>
+        </div>
+        <Button size="sm" onClick={() => pickTab("files")}><Download className="h-4 w-4" /> Download centre</Button>
+      </div>
+    </section>
+  );
+}
+
+function WhatNew({ p }: { p: Any; token: string | null }) {
+  const key = "nine3-seen-" + p.client.id;
+  const [seen, setSeen] = useState<number | null>(null);
+  useEffect(() => { setSeen(Number(localStorage.getItem(key) || 0)); }, [key]);
+  if (seen === null) return null;
+  const items = (p.activity ?? []).filter((a: Any) => a.actor === "studio");
+  if (items.length === 0) return null;
+  const fresh = items.filter((a: Any) => new Date(a.created_at).getTime() > seen);
+  return (
+    <Section title={fresh.length ? `What's new (${fresh.length})` : "Recent updates"}>
+      <ul className="space-y-2 text-sm">
+        {(fresh.length ? fresh : items.slice(0, 5)).map((a: Any) => (
+          <li key={a.id} className="flex items-center justify-between gap-3 rounded-md border bg-cream px-3 py-2">
+            <span>{a.message}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">{fmtDate(a.created_at)}</span>
+          </li>
+        ))}
+      </ul>
+      {fresh.length > 0 && (
+        <div className="mt-3"><Button size="sm" variant="outline" onClick={() => { localStorage.setItem(key, String(Date.now())); setSeen(Date.now()); }}>Mark all as seen</Button></div>
+      )}
+    </Section>
+  );
+}
+
+function FavFileGrid({ p, token, files, empty }: { p: Any; token: string | null; files: Any[]; empty?: string }) {
+  const act = useAct(token);
+  const [favOnly, setFavOnly] = useState(false);
+  const favs: string[] = Array.isArray(p.client?.portal_prefs?.favourites) ? p.client.portal_prefs.favourites : [];
+  if (files.length === 0) return <Empty>{empty}</Empty>;
+  const shown = favOnly ? files.filter((f: Any) => favs.includes(f.id)) : [...files].sort((a: Any, b: Any) => Number(favs.includes(b.id)) - Number(favs.includes(a.id)));
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">Tap the heart to save favourites.</p>
+        <Button size="sm" variant={favOnly ? "default" : "outline"} onClick={() => setFavOnly(!favOnly)}>
+          <Heart className={`h-3.5 w-3.5 ${favOnly ? "" : "text-muted-foreground"}`} /> Favourites{favs.length ? ` (${favs.length})` : ""}
+        </Button>
+      </div>
+      {shown.length === 0 ? <Empty>Nothing saved yet — tap the heart on any file.</Empty> : (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {shown.map((f: Any) => {
+            const isFav = favs.includes(f.id);
+            return (
+              <div key={f.id} className="relative overflow-hidden rounded-md border bg-card">
+                <Preview f={f} />
+                <button type="button" aria-label={isFav ? "Remove favourite" : "Save favourite"} onClick={() => act({ type: "favourite", id: f.id, on: !isFav })} className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 shadow-sm transition-transform hover:scale-110">
+                  <Heart className={`h-4 w-4 ${isFav ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+                </button>
+                <div className="flex items-center justify-between gap-2 p-2">
+                  <div className="min-w-0"><p className="truncate text-sm">{f.title}</p><p className="text-xs text-muted-foreground">{f.uploaded_by === "client" ? "From you" : "From Nine3"} · {fmtDate(f.created_at)}</p></div>
+                  {f.url && <a href={f.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary"><Download className="h-4 w-4" /></a>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BookCall({ token, compact }: { token: string | null; compact?: boolean }) {
+  const act = useAct(token);
+  const [v, setV] = useState({ kind: "discovery", date: "", time: "", notes: "" });
+  const [busy, setBusy] = useState(false);
+  return (
+    <form className="grid gap-3 sm:grid-cols-2" onSubmit={async (e) => {
+      e.preventDefault(); setBusy(true);
+      const ok = await act({ type: "bookCall", kind: v.kind, date: v.date, time: v.time || undefined, notes: v.notes || undefined }, "Call requested — we'll confirm within one working day.");
+      if (ok) setV({ kind: "discovery", date: "", time: "", notes: "" });
+      setBusy(false);
+    }}>
+      <div className="space-y-1.5"><Label>Type of call</Label>
+        <select className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm" value={v.kind} onChange={(e) => setV({ ...v, kind: e.target.value })}>
+          <option value="discovery">Discovery call</option>
+          <option value="review">Design review</option>
+        </select>
+      </div>
+      <div className="space-y-1.5"><Label>Preferred date</Label><Input type="date" required value={v.date} onChange={(e) => setV({ ...v, date: e.target.value })} /></div>
+      <div className="space-y-1.5"><Label>Preferred time</Label><Input type="time" value={v.time} onChange={(e) => setV({ ...v, time: e.target.value })} /></div>
+      <div className="space-y-1.5 sm:col-span-2"><Label>Anything we should know?</Label><Textarea rows={3} value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} placeholder="Optional" /></div>
+      {!compact && <p className="text-xs text-muted-foreground sm:col-span-2">Pick a date and we'll confirm your slot by email within one working day.</p>}
+      <div className="sm:col-span-2"><Button type="submit" disabled={busy}>{busy ? "Sending…" : "Request call"}</Button></div>
+    </form>
+  );
+}
+
+const Q_FIELDS: { key: string; label: string }[] = [
+  { key: "Business", label: "Tell us about your business (one or two lines)" },
+  { key: "Audience", label: "Who are your customers?" },
+  { key: "Feel", label: "What should people feel when they see your brand?" },
+  { key: "Colours", label: "Colours you love / want to avoid" },
+  { key: "Inspiration", label: "Brands or websites you admire" },
+  { key: "Extra", label: "Anything else we should know?" },
+];
+
+function QuestionnaireCard({ p, token }: { p: Any; token: string | null }) {
+  const act = useAct(token);
+  const [open, setOpen] = useState(false);
+  const [v, setV] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const done = (p.activity ?? []).some((a: Any) => /questionnaire/i.test(a.message ?? ""));
+  return (
+    <Section title="Brand questionnaire">
+      {done ? (
+        <div className="flex items-start gap-3 text-sm"><ClipboardList className="mt-0.5 h-4 w-4 text-success" /><p>Questionnaire received — thank you! We'll use it to shape your concepts.</p></div>
+      ) : open ? (
+        <form className="space-y-3" onSubmit={async (e) => {
+          e.preventDefault(); setBusy(true);
+          const ok = await act({ type: "questionnaire", answers: v }, "Questionnaire sent — thank you!");
+          if (ok) setOpen(false);
+          setBusy(false);
+        }}>
+          {Q_FIELDS.map((f) => (
+            <div key={f.key} className="space-y-1"><Label className="text-xs">{f.label}</Label><Textarea rows={2} value={v[f.key] ?? ""} onChange={(e) => setV({ ...v, [f.key]: e.target.value })} /></div>
+          ))}
+          <div className="flex gap-2"><Button type="submit" disabled={busy}>{busy ? "Sending…" : "Send answers"}</Button><Button type="button" variant="ghost" onClick={() => setOpen(false)}>Later</Button></div>
+        </form>
+      ) : (
+        <>
+          <p className="mb-4 text-sm text-muted-foreground">A few quick questions so we can nail your brief. Takes about five minutes.</p>
+          <Button size="sm" onClick={() => setOpen(true)}><ClipboardList className="h-4 w-4" /> Fill it in</Button>
+        </>
+      )}
+    </Section>
+  );
+}
+
+const FAQS: { q: string; a: string }[] = [
+  { q: "How do I approve a design?", a: "Open Proofs, review the design, then choose Approve or Request changes. If you'd like tweaks, tell us what to change and we'll get straight on it." },
+  { q: "How do I send you files, photos or content?", a: "Use the upload box in Files. Brand assets, copy, photos — anything. It comes straight to us and we get notified." },
+  { q: "How do downloads work?", a: "Every finished file is in your download centre with a download button. Tap the heart to save favourites so you can find them again quickly." },
+  { q: "When are invoices issued?", a: "Invoices appear here as soon as they're issued, usually monthly. Paid and outstanding amounts are always visible." },
+  { q: "Can I book a call?", a: "Yes — choose discovery call or design review, pick a date and we'll confirm by email within one working day." },
+  { q: "Something looks wrong, or I need a hand", a: "Email natalie@nine3designs.co.uk and we'll sort it quickly." },
+];
+
+function HelpCentre() {
+  return (
+    <div className="space-y-2">
+      {FAQS.map((f) => (
+        <details key={f.q} className="group rounded-md border bg-card p-4">
+          <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-medium">{f.q}<ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" /></summary>
+          <p className="mt-2 text-sm text-muted-foreground">{f.a}</p>
+        </details>
+      ))}
+    </div>
   );
 }

@@ -28,7 +28,7 @@ export const getPortal = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { client, admin } = await resolveClient(data);
     const cid = client.id;
-    const [onb, projects, files, invoices, proposals, fixtures, tasks] = await Promise.all([
+    const [onb, projects, files, invoices, proposals, fixtures, tasks, activity] = await Promise.all([
       admin.from("onboarding_items").select("*").eq("client_id", cid).order("position"),
       admin.from("projects").select("id, name, description, status, due_date, milestones(id, title, due_date, done, position)").eq("client_id", cid).order("created_at", { ascending: false }),
       admin.from("deliverables").select("*").eq("client_id", cid).order("created_at", { ascending: false }),
@@ -36,6 +36,7 @@ export const getPortal = createServerFn({ method: "POST" })
       admin.from("proposals").select("id, kind, title, body, items, status, accepted_name, accepted_at, created_at").eq("client_id", cid).neq("status", "draft").order("created_at", { ascending: false }),
       admin.from("sports_fixtures").select("*").eq("client_id", cid).order("match_date"),
       admin.from("tasks").select("id, title, notes, status, priority, due_date").eq("client_id", cid).order("created_at"),
+      admin.from("activity_log").select("id, message, actor, created_at").eq("client_id", cid).order("created_at", { ascending: false }).limit(15),
     ]);
     const deliverables = await Promise.all((files.data ?? []).map(async (f) => {
       let url: string | null = null;
@@ -44,7 +45,7 @@ export const getPortal = createServerFn({ method: "POST" })
       return { ...f, url };
     }));
     return {
-      client: { id: cid, name: client.name, company: client.company, portal_type: client.portal_type, home_kit: client.home_kit, away_kit: client.away_kit, monthly_fee: client.monthly_fee, notes: client.notes },
+      client: { id: cid, name: client.name, company: client.company, portal_type: client.portal_type, home_kit: client.home_kit, away_kit: client.away_kit, monthly_fee: client.monthly_fee, notes: client.notes, portal_prefs: (client as Any).portal_prefs ?? null },
       onboarding: onb.data ?? [],
       projects: projects.data ?? [],
       deliverables,
@@ -52,6 +53,7 @@ export const getPortal = createServerFn({ method: "POST" })
       proposals: proposals.data ?? [],
       fixtures: fixtures.data ?? [],
       tasks: tasks.data ?? [],
+      activity: activity.data ?? [],
     };
   });
 
@@ -60,7 +62,10 @@ type Action =
   | { type: "proof"; id: string; decision: "approved" | "revision"; feedback?: string }
   | { type: "accept"; id: string; name: string }
   | { type: "uploadUrl"; fileName: string }
-  | { type: "recordUpload"; path: string; fileName: string; title?: string; kind?: string };
+  | { type: "recordUpload"; path: string; fileName: string; title?: string; kind?: string }
+  | { type: "bookCall"; date: string; time?: string; kind?: string; name?: string; notes?: string }
+  | { type: "questionnaire"; answers?: Record<string, string> }
+  | { type: "favourite"; id: string; on: boolean };
 
 export const portalAction = createServerFn({ method: "POST" })
   .inputValidator((d: Access & { action: Action }) => d)
@@ -102,6 +107,43 @@ export const portalAction = createServerFn({ method: "POST" })
       const kind = a.kind === "resource" ? "resource" : "upload";
       await admin.from("deliverables").insert({ client_id: cid, kind, title: (a.title || a.fileName).slice(0, 200), file_path: a.path, file_name: a.fileName.slice(0, 200), status: "shared", uploaded_by: "client", week_of: new Date().toISOString().slice(0, 10) });
       await log(`Uploaded ${kind === "resource" ? "resource photo" : "file"}: ${a.title || a.fileName}`);
+      return { ok: true };
+    }
+    if (a.type === "bookCall") {
+      if (!a.date) throw new Error("Pick a date for the call.");
+      const kind = a.kind === "review" ? "design review" : "discovery call";
+      const when = `${a.date}${a.time ? ` at ${a.time}` : ""}`;
+      await admin.from("tasks").insert({
+        client_id: cid,
+        title: `Call request: ${kind} — ${when}`,
+        notes: `Requested by ${(a.name || "client").slice(0, 120)}. Preferred time: ${when}.${a.notes ? ` Notes: ${String(a.notes).slice(0, 1500)}` : ""}`,
+        priority: "medium",
+        status: "todo",
+        due_date: a.date,
+      });
+      await log(`Requested a ${kind} for ${when}`);
+      return { ok: true };
+    }
+    if (a.type === "questionnaire") {
+      const lines = Object.entries(a.answers ?? {}).filter(([, v]) => String(v ?? "").trim()).map(([k, v]) => `${k}: ${String(v).trim().slice(0, 600)}`);
+      if (lines.length === 0) throw new Error("Please fill in at least one answer.");
+      await admin.from("tasks").insert({
+        client_id: cid,
+        title: "Client questionnaire submitted",
+        notes: lines.join("\n").slice(0, 4000),
+        priority: "low",
+        status: "todo",
+      });
+      await log("Submitted their brand questionnaire");
+      return { ok: true };
+    }
+    if (a.type === "favourite") {
+      const { data: cur } = await admin.from("clients").select("portal_prefs").eq("id", cid).maybeSingle();
+      const prefs = (cur?.portal_prefs ?? {}) as Any;
+      const list = new Set<string>(Array.isArray(prefs.favourites) ? prefs.favourites : []);
+      if (a.on) list.add(a.id); else list.delete(a.id);
+      const { error } = await admin.from("clients").update({ portal_prefs: { ...prefs, favourites: [...list] } }).eq("id", cid);
+      if (error) throw new Error("Favourites aren't ready yet — please check back soon.");
       return { ok: true };
     }
     throw new Error("Unknown action");
