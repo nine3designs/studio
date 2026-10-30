@@ -163,3 +163,36 @@ input:focus, textarea:focus, select:focus { box-shadow: 0 0 0 3px rgba(23,75,80,
 ::-webkit-scrollbar-thumb { background: rgba(23,75,80,.25); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(23,75,80,.4); border: 2px solid transparent; background-clip: content-box; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- Premium studio pass 2: petrol + gold on porcelain ---- */
+body {
+  background-image:
+    radial-gradient(1100px 550px at 85% -10%, rgba(23,75,80,.1), transparent 60%),
+    radial-gradient(900px 520px at -10% 110%, rgba(201,162,94,.08), transparent 55%);
+  background-attachment: fixed;
+}
+.bg-sidebar {
+  background-color: #174B50;
+  background-image: linear-gradient(180deg, #1B565C 0%, #123E42 55%, #0D3438 100%) !important;
+}
+.bg-sidebar a.bg-sidebar-accent {
+  background: rgba(201,162,94,.16) !important;
+  color: #EBCE9A !important;
+  box-shadow: inset 0 0 0 1px rgba(201,162,94,.28);
+}
+.bg-sidebar kbd { border-color: rgba(201,162,94,.35) !important; }
+.bg-primary {
+  background-image: linear-gradient(135deg, #1B5A60, #123E42) !important;
+  box-shadow: 0 4px 14px rgba(23,75,80,.3);
+}
+::selection { background: rgba(201,162,94,.3); }
+.eyebrow { color: #9A7B3F; }
+.bg-card:hover {
+  box-shadow: 0 2px 4px rgba(23,75,80,.05), 0 14px 36px rgba(23,75,80,.09), 0 6px 18px rgba(201,162,94,.06);
+}
+.dash-hero { position: relative; overflow: hidden; background-image: linear-gradient(135deg, #0F3A3E, #174B50 55%, #1E5F66) !important; }
+.dash-hero::after {
+  content: ""; position: absolute; right: -70px; top: -70px; width: 280px; height: 280px; border-radius: 9999px;
+  background: radial-gradient(circle, rgba(201,162,94,.4), transparent 70%); pointer-events: none;
+}
+.dash-hero .eyebrow { color: #EBCE9A !important; }
