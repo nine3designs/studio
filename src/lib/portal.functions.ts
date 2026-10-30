@@ -80,7 +80,13 @@ type Action =
   | { type: "bookCall"; date: string; time?: string; kind?: string; name?: string; notes?: string }
   | { type: "questionnaire"; answers?: Record<string, string> }
   | { type: "favourite"; id: string; on: boolean }
-  | { type: "fixtureSheet"; id: string; text?: string; path?: string; fileName?: string };
+  | { type: "fixtureSheet"; id: string; text?: string; path?: string; fileName?: string }
+  | { type: "newRequest"; title: string; notes?: string }
+  | { type: "taskAdd"; title: string }
+  | { type: "taskDone"; id: string; done: boolean }
+  | { type: "taskDelete"; id: string }
+  | { type: "clientNote"; text: string }
+  | { type: "deleteFile"; id: string };
 
 export const portalAction = createServerFn({ method: "POST" })
   .inputValidator((d: Access & { action: Action }) => d)
@@ -119,7 +125,7 @@ export const portalAction = createServerFn({ method: "POST" })
     }
     if (a.type === "recordUpload") {
       if (!a.path.startsWith(`${cid}/client-`)) throw new Error("Invalid upload");
-      const kind = a.kind === "resource" ? "resource" : "upload";
+      const kind = ["resource", "photo"].includes(String(a.kind)) ? String(a.kind) : "upload";
       await admin.from("deliverables").insert({ client_id: cid, kind, title: (a.title || a.fileName).slice(0, 200), file_path: a.path, file_name: a.fileName.slice(0, 200), status: "shared", uploaded_by: "client", week_of: new Date().toISOString().slice(0, 10) });
       await log(`Uploaded ${kind === "resource" ? "resource photo" : "file"}: ${a.title || a.fileName}`);
       return { ok: true };
@@ -180,6 +186,41 @@ export const portalAction = createServerFn({ method: "POST" })
       const { error } = await admin.from("sports_fixtures").update({ graphics: gfx }).eq("id", a.id).eq("client_id", cid);
       if (error) throw new Error("Could not save the team sheet.");
       await log(`Sent team sheet info for the fixture on ${fx.match_date}`);
+      return { ok: true };
+    }
+    if (a.type === "newRequest") {
+      const { error } = await admin.from("tasks").insert({ client_id: cid, title: a.title.slice(0, 200), notes: (a.notes ? a.notes.slice(0, 2000) + " · " : "") + "Requested via portal", status: "open", priority: "normal" });
+      if (error) throw new Error("Could not send the request.");
+      await log(`New graphic request: ${a.title.slice(0, 80)}`);
+      return { ok: true };
+    }
+    if (a.type === "taskAdd") {
+      const { error } = await admin.from("tasks").insert({ client_id: cid, title: a.title.slice(0, 200), status: "open", priority: "normal" });
+      if (error) throw new Error("Could not add the item.");
+      await log(`Client added to-do item: ${a.title.slice(0, 80)}`);
+      return { ok: true };
+    }
+    if (a.type === "taskDone") {
+      const { error } = await admin.from("tasks").update({ status: a.done ? "done" : "open" }).eq("id", a.id).eq("client_id", cid);
+      if (error) throw new Error("Could not update the item.");
+      return { ok: true };
+    }
+    if (a.type === "taskDelete") {
+      const { error } = await admin.from("tasks").delete().eq("id", a.id).eq("client_id", cid);
+      if (error) throw new Error("Could not remove the item.");
+      await log(`Client removed a to-do item`);
+      return { ok: true };
+    }
+    if (a.type === "clientNote") {
+      const { error } = await admin.from("clients").update({ notes: (a.text || "").slice(0, 5000) }).eq("id", cid);
+      if (error) throw new Error("Could not save the notes.");
+      await log(`Client updated the notes`);
+      return { ok: true };
+    }
+    if (a.type === "deleteFile") {
+      const { data: row } = await admin.from("deliverables").delete().eq("id", a.id).eq("client_id", cid).select("title").maybeSingle();
+      if (!row) throw new Error("File not found.");
+      await log(`Client deleted file: ${row.title}`);
       return { ok: true };
     }
     throw new Error("Unknown action");
