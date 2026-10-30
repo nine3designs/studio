@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Heart, HelpCircle, Menu, PartyPopper, Upload } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Heart, HelpCircle, Menu, PartyPopper, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -115,13 +115,32 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         .sports [role="progressbar"] > * { background: #FFD520 !important; }
         .sports .fx-card { background: rgba(255,255,255,.05) !important; border-color: rgba(255,255,255,.1) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
         .sports .fx-card:hover { background: rgba(255,255,255,.085) !important; transform: translateY(-2px); border-color: rgba(255,255,255,.2) !important; box-shadow: 0 16px 40px rgba(0,0,0,.35); }
+        .sports .fx-card:hover { background: rgba(255,255,255,.085) !important; transform: translateY(-2px); border-color: rgba(255,255,255,.2) !important; box-shadow: 0 16px 40px rgba(0,0,0,.35); }
+        .sports [role="tab"] { border-radius: 999px !important; transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
+        .sports [role="tab"]:hover { background: rgba(255,255,255,.1); transform: translateY(-1px); }
+        .sports .upload-glass { background: rgba(255,255,255,.04) !important; border-color: rgba(255,255,255,.2) !important; }
+        .sports .file-btn { background: linear-gradient(135deg, #FFD520, #E8BE0D); color: #0A2547 !important; }
+        .sports .fx-modal textarea, .sports .fx-modal input { background: rgba(255,255,255,.08) !important; border-color: rgba(255,255,255,.15) !important; color: #EAF2FF !important; }
+        .sports .fx-modal ::placeholder { color: rgba(255,255,255,.35); }
+        .sports .fx-modal { animation: fxpop .28s cubic-bezier(.2,.9,.3,1.15); }
+        @keyframes fxpop { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
+        @media (max-width: 640px) {
+          .sports main { padding-left: 1rem !important; padding-right: 1rem !important; }
+          .sports-hero { padding: 1.1rem !important; }
+          .sports-hero h2 { font-size: 1.4rem !important; }
+          .sports header img { height: 4.25rem !important; }
+          .sports .fx-card { padding: .875rem !important; gap: .75rem !important; }
+          .sports .fx-date { height: 2.9rem !important; width: 2.9rem !important; }
+          .sports section.rounded-md { padding: 1rem !important; }
+          .sports section.rounded-md h2 { font-size: 1.05rem !important; }
+        }
 
       `}</style>
       <header className="bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "#0E55AF" } : undefined}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-7">
           <img src={LOGO_URL} alt="Nine3 Designs" className="h-24 md:h-36" />
         </div>
-        {name && <div className="mx-auto max-w-5xl px-6 pb-8"><p className="text-sm opacity-70">Welcome,</p><h1 className="font-heading text-3xl font-semibold">{name}</h1></div>}
+        {name && <div className="mx-auto max-w-5xl px-6 pb-8"><p className="text-sm opacity-70">Welcome,</p><h1 className="font-heading text-3xl font-bold tracking-tight" style={tone === "sports" ? { fontFamily: "'League Spartan', sans-serif" } : undefined}>{name}</h1></div>}
       </header>
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
       <footer className="pb-8 text-center text-xs text-muted-foreground/80">
@@ -309,9 +328,19 @@ function UploadBox({ token, kind, label }: { token: string | null; kind: "upload
     setFiles(null); (e.target as HTMLFormElement).reset();
     setBusy(false);
   }
+  const names = files?.length ? Array.from(files).map((f) => f.name).join(", ") : "";
   return (
-    <form onSubmit={go} className="flex flex-wrap items-end gap-3 rounded-md border border-dashed bg-card p-5">
-      <div className="min-w-60 flex-1 space-y-1.5"><p className="text-sm font-medium">{label}</p><Input type="file" multiple onChange={(e) => setFiles(e.target.files)} /></div>
+    <form onSubmit={go} className="upload-glass flex flex-wrap items-end gap-3 rounded-xl border border-dashed p-5">
+      <div className="min-w-60 flex-1 space-y-2">
+        <p className="text-sm font-medium">{label}</p>
+        <label className="flex cursor-pointer flex-wrap items-center gap-2">
+          <span className="file-btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold shadow-sm transition-transform hover:scale-105">
+            <Upload className="h-3.5 w-3.5" /> Choose files
+          </span>
+          <span className={`max-w-full truncate text-xs ${names ? "text-foreground" : "text-muted-foreground"}`}>{names || "No file chosen"}</span>
+          <input type="file" multiple className="hidden" onChange={(e) => setFiles(e.target.files)} />
+        </label>
+      </div>
       <Button type="submit" disabled={busy || !files?.length}><Upload className="h-4 w-4" /> {busy ? "Uploading…" : "Upload"}</Button>
     </form>
   );
@@ -381,22 +410,23 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
     }
   }
 
+  const [openFx, setOpenFx] = useState<Any | null>(null);
   const next = upcoming[0];
   const nextKit = next ? (next.venue === "home" ? p.client.home_kit : p.client.away_kit) : null;
   const nextGfx = next ? ((next.graphics ?? []) as { name: string; done: boolean }[]) : [];
   const gfxDone = nextGfx.filter((x) => x.done).length;
 
   const tabs = [
-    { v: "fixtures", l: "Fixtures" },
-    { v: "todo", l: "To-do" },
-    { v: "proofs", l: "Proofs" },
-    { v: "files", l: "Files" },
-    { v: "payments", l: "Payments" },
-    { v: "help", l: "Help" },
+    { v: "fixtures", l: "FIXTURES" },
+    { v: "todo", l: "TO-DO" },
+    { v: "proofs", l: "PROOFS" },
+    { v: "files", l: "GRAPHICS" },
+    { v: "payments", l: "PAYMENTS" },
+    { v: "help", l: "HELP" },
   ];
 
   return (
-    <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Raleway', ui-sans-serif, sans-serif" } as Any}>
+    <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Outfit', ui-sans-serif, sans-serif" } as Any}>
       {next && (
         <section className="sports-hero portal-fade overflow-hidden rounded-md p-6 text-white md:p-8">
           <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {fmtDate(next.match_date)}</p>
@@ -433,11 +463,11 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
             <Kit label="Away kit" k={p.client.away_kit} />
           </div>
           <Section title="Upcoming fixtures">
-            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="grid gap-3 sm:grid-cols-2">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>}
+            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="grid gap-3 sm:grid-cols-2">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} onOpen={() => setOpenFx(f)} />)}</ul>}
           </Section>
           {past.length > 0 && (
             <Section title="Previous fixtures">
-              <ul className="grid gap-3 sm:grid-cols-2">{past.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>
+              <ul className="grid gap-3 sm:grid-cols-2">{past.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} onOpen={() => setOpenFx(f)} />)}</ul>
             </Section>
           )}
         </TabsContent>
@@ -505,9 +535,12 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
 
         <TabsContent value="help" className="mt-0 space-y-8">
           <WhatNew p={p} token={token} />
-          <Section title="Help & FAQs"><HelpCentre /></Section>
+          <Section title="Need help?">
+            <p className="text-sm text-muted-foreground">Questions about fixtures, graphics or payments? Email the studio at <a className="font-medium text-primary underline-offset-2 hover:underline" href="mailto:natalie@nine3designs.co.uk">natalie@nine3designs.co.uk</a> and we’ll get back to you quickly.</p>
+          </Section>
         </TabsContent>
       </Tabs>
+      {openFx && <FxModal f={openFx} token={token} onClose={() => setOpenFx(null)} />}
     </div>
   );
 }
@@ -528,16 +561,24 @@ function Kit({ label, k }: { label: string; k: Any }) {
   );
 }
 
-function Fixture({ f, client }: { f: Any; client?: Any }) {
+function Fixture({ f, client, onOpen }: { f: Any; client?: Any; onOpen?: () => void }) {
   const g = (f.graphics ?? []) as { name: string; done: boolean; url?: string }[];
-  const done = g.filter((x) => x.done).length;
+  const sheet = g.find((x) => x && x.name === "Team sheet") ?? null;
+  const chips = g.filter((x) => x && x.name !== "Team sheet");
+  const done = chips.filter((x) => x.done).length;
   const kit = client ? (f.venue === "home" ? client.home_kit : client.away_kit) : null;
   const dots = kit ? (["primary", "secondary"] as const).filter((c) => kit[c]) : [];
   const d = new Date(`${f.match_date}T00:00:00`);
-  const pct = g.length ? Math.round((done / g.length) * 100) : 0;
+  const pct = chips.length ? Math.round((done / chips.length) * 100) : 0;
   return (
-    <li className="fx-card flex gap-4 rounded-xl border p-4">
-      <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-white/10 bg-white/[0.06]">
+    <li
+      className="fx-card flex cursor-pointer gap-4 rounded-xl border p-4"
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") onOpen?.(); }}
+    >
+      <div className="fx-date flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-white/10 bg-white/[0.06]">
         <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#FFD520" }}>{d.toLocaleDateString("en-GB", { month: "short" })}</p>
         <p className="font-heading text-xl font-bold leading-none">{d.getDate()}</p>
       </div>
@@ -555,28 +596,88 @@ function Fixture({ f, client }: { f: Any; client?: Any }) {
         )}
         <div className="mt-2.5 flex items-center gap-2">
           <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#FFD520" }} /></div>
-          <span className="text-[11px] text-white/60">{done}/{g.length} ready</span>
+          <span className="text-[11px] text-white/60">{done}/{chips.length} ready</span>
         </div>
-        <div className="mt-2.5 flex flex-wrap gap-1.5">{g.map((x, i) => (
+        <div className="mt-2.5 flex flex-wrap gap-1.5">{chips.map((x, i) => (
           x.done && x.url ? (
-            <a key={i} href={x.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success transition-transform hover:scale-105" title="Tap to download">
+            <a key={i} href={x.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success transition-transform hover:scale-105" title="Tap to download">
               <Download className="h-3 w-3" />{x.name}
             </a>
           ) : (
             <span key={i} className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${x.done ? "bg-success/15 text-success" : "bg-white/[0.06] text-white/50"}`}>{x.done && <Check className="h-3 w-3" />}{x.name}</span>
           )
         ))}</div>
+        {sheet && (sheet.text || sheet.url) && (
+          <p className="mt-2 text-[11px] text-white/50">Team sheet {sheet.text ? "info added" : ""}{sheet.text && sheet.url ? " · " : ""}{sheet.url ? "file uploaded" : ""}</p>
+        )}
       </div>
     </li>
+  );
+}
+
+function FxModal({ f, token, onClose }: { f: Any; token: string | null; onClose: () => void }) {
+  const act = useAct(token);
+  const g = (f.graphics ?? []) as Any[];
+  const sheet = g.find((x) => x && x.name === "Team sheet") ?? null;
+  const [text, setText] = useState<string>(sheet?.text ?? "");
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const d = new Date(`${f.match_date}T00:00:00`);
+  async function save() {
+    setBusy(true);
+    let path: string | undefined;
+    if (file) {
+      const r = (await act({ type: "uploadUrl", fileName: file.name })) as { path: string; uploadToken: string } | null;
+      if (!r) { setBusy(false); return; }
+      const { error } = await supabase.storage.from("files").uploadToSignedUrl(r.path, r.uploadToken, file);
+      if (error) { toast.error(error.message); setBusy(false); return; }
+      path = r.path;
+    }
+    const ok = await act({ type: "fixtureSheet", id: f.id, text: text.trim() || undefined, path, fileName: file?.name }, "Team sheet saved · thank you!");
+    if (ok) onClose();
+    setBusy(false);
+  }
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center" onClick={onClose}>
+      <div className="fx-modal max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-white/10 bg-[#0A1E38]/95 p-6 shadow-2xl backdrop-blur-xl md:rounded-2xl" onClick={(e: Any) => e.stopPropagation()}>
+        <p className="eyebrow" style={{ color: "#FFD520" }}>{d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</p>
+        <div className="mt-1 flex items-start justify-between gap-3">
+          <h3 className="font-heading text-2xl font-bold tracking-tight text-white">{f.venue === "home" ? "vs" : "away at"} {f.opponent}</h3>
+          <button type="button" onClick={onClose} className="rounded-full p-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white" aria-label="Close"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${f.venue === "home" ? "border-[#FFD520]/40 bg-[#FFD520]/10 text-[#FFD520]" : "border-sky-400/40 bg-sky-400/10 text-sky-300"}`}>{f.venue}</span>
+          {f.competition && <span className="rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/70">{f.competition}</span>}
+          {sheet?.url && <a href={sheet.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-0.5 text-[10px] font-semibold text-success"><Download className="h-3 w-3" />Current team sheet</a>}
+        </div>
+        {f.notes && <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.05] p-3 text-xs text-white/70">{f.notes}</p>}
+        <div className="mt-5 space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-white/60">Team sheet info</label>
+          <Textarea rows={4} value={text} onChange={(e: Any) => setText(e.target.value)} placeholder="Squad list, formations, availability, kick-off notes…" className="fx-sheet-input" />
+        </div>
+        <label className="mt-4 flex cursor-pointer flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-[#0A2547] shadow-sm transition-transform hover:scale-105"><Upload className="h-3.5 w-3.5" /> Choose file</span>
+          <span className={`max-w-full truncate text-xs ${file ? "text-white" : "text-white/50"}`}>{file ? file.name : "Optional: attach a team sheet file (PDF or image)"}</span>
+          <input type="file" className="hidden" onChange={(e: Any) => setFile(e.target.files?.[0] ?? null)} />
+        </label>
+        <div className="mt-6 flex gap-2">
+          <Button onClick={save} disabled={busy}>{busy ? "Saving…" : "Save team sheet"}</Button>
+          <Button variant="ghost" onClick={onClose} className="text-white/70 hover:bg-white/10 hover:text-white">Cancel</Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
 /* ---------------- Portal experience upgrades ---------------- */
 function PortalLoader() {
   return (
-    <div className="flex flex-col items-center py-24 text-center">
-      <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-40 md:h-52" />
-      <p className="mt-6 text-sm text-muted-foreground">Preparing your portal…</p>
+    <div className="flex min-h-[60vh] flex-col items-center justify-center py-24 text-center">
+      <div className="load-glass flex flex-col items-center rounded-2xl border p-10 md:p-12">
+        <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-40 md:h-52" />
+        <p className="mt-8 text-sm font-medium">Preparing your portal…</p>
+        <div className="load-bar mt-5"><span /></div>
+      </div>
     </div>
   );
 }
