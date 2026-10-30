@@ -103,7 +103,9 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         .sports .bg-success\/15 { background: rgba(110,231,160,.12) !important; }
         .sports .text-destructive { color: #FF8A8A !important; }
         .sports .bg-destructive\/10 { background: rgba(255,138,138,.12) !important; }
-        .sports input[type="checkbox"] { accent-color: #FFD520; }
+        .sports input[type="checkbox"] { accent-color: #FFD520; }        .sports .fx-card { background: rgba(255,255,255,.05) !important; border-color: rgba(255,255,255,.1) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+        .sports .fx-card:hover { background: rgba(255,255,255,.085) !important; transform: translateY(-2px); border-color: rgba(255,255,255,.2) !important; box-shadow: 0 16px 40px rgba(0,0,0,.35); }
+
       `}</style>
       <header className="bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "#0E55AF" } : undefined}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-7">
@@ -421,11 +423,11 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
             <Kit label="Away kit" k={p.client.away_kit} />
           </div>
           <Section title="Upcoming fixtures">
-            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="space-y-3">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>}
+            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="grid gap-3 sm:grid-cols-2">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>}
           </Section>
           {past.length > 0 && (
             <Section title="Previous fixtures">
-              <ul className="space-y-2">{past.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>
+              <ul className="grid gap-3 sm:grid-cols-2">{past.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>
             </Section>
           )}
         </TabsContent>
@@ -448,7 +450,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
             </Section>
           )}
           <Section title="Matchday graphics to-do">
-            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="space-y-3">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>}
+            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="grid gap-3 sm:grid-cols-2">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>}
           </Section>
           {p.client.notes && (
             <Section title="Team sheet">
@@ -517,27 +519,44 @@ function Kit({ label, k }: { label: string; k: Any }) {
 }
 
 function Fixture({ f, client }: { f: Any; client?: Any }) {
-  const g = (f.graphics ?? []) as { name: string; done: boolean }[];
+  const g = (f.graphics ?? []) as { name: string; done: boolean; url?: string }[];
   const done = g.filter((x) => x.done).length;
   const kit = client ? (f.venue === "home" ? client.home_kit : client.away_kit) : null;
   const dots = kit ? (["primary", "secondary"] as const).filter((c) => kit[c]) : [];
+  const d = new Date(`${f.match_date}T00:00:00`);
+  const pct = g.length ? Math.round((done / g.length) * 100) : 0;
   return (
-    <li className="rounded-md border p-4 transition-colors hover:border-primary/40">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="flex flex-wrap items-center gap-2 font-medium">
-          {dots.length > 0 && <span className="flex gap-1">{dots.map((c) => <span key={c} className="h-2.5 w-2.5 rounded-full border border-black/10" style={{ background: kit[c] }} />)}</span>}
-          {fmtDate(f.match_date)} · vs {f.opponent} <span className="text-xs uppercase text-muted-foreground">({f.venue}{f.competition ? ` · ${f.competition}` : ""})</span></p>
-        <span className="text-xs text-muted-foreground">{done}/{g.length} ready</span>
+    <li className="fx-card flex gap-4 rounded-xl border p-4">
+      <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-white/10 bg-white/[0.06]">
+        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#FFD520" }}>{d.toLocaleDateString("en-GB", { month: "short" })}</p>
+        <p className="font-heading text-xl font-bold leading-none">{d.getDate()}</p>
       </div>
-      <div className="mt-2 flex flex-wrap gap-2">{g.map((x, i) => (
-        x.done && x.url ? (
-          <a key={i} href={x.url} target="_blank" rel="noreferrer" className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-transform hover:scale-105 ${x.done ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`} title="Tap to download">
-            <Download className="h-3 w-3" />{x.name}
-          </a>
-        ) : (
-          <span key={i} className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${x.done ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{x.done && <Check className="h-3 w-3" />}{x.name}</span>
-        )
-      ))}</div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-heading font-semibold tracking-tight">
+            {f.venue === "home" ? "vs" : "away at"} {f.opponent}
+          </p>
+          <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${f.venue === "home" ? "border-[#FFD520]/40 bg-[#FFD520]/10 text-[#FFD520]" : "border-sky-400/40 bg-sky-400/10 text-sky-300"}`}>
+            {f.venue}{f.competition ? ` · ${f.competition}` : ""}
+          </span>
+        </div>
+        {dots.length > 0 && (
+          <span className="mt-1.5 flex gap-1">{dots.map((c) => <span key={c} className="h-2.5 w-2.5 rounded-full border border-white/40" style={{ background: kit[c] }} />)}</span>
+        )}
+        <div className="mt-2.5 flex items-center gap-2">
+          <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#FFD520" }} /></div>
+          <span className="text-[11px] text-white/60">{done}/{g.length} ready</span>
+        </div>
+        <div className="mt-2.5 flex flex-wrap gap-1.5">{g.map((x, i) => (
+          x.done && x.url ? (
+            <a key={i} href={x.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success transition-transform hover:scale-105" title="Tap to download">
+              <Download className="h-3 w-3" />{x.name}
+            </a>
+          ) : (
+            <span key={i} className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${x.done ? "bg-success/15 text-success" : "bg-white/[0.06] text-white/50"}`}>{x.done && <Check className="h-3 w-3" />}{x.name}</span>
+          )
+        ))}</div>
+      </div>
     </li>
   );
 }
