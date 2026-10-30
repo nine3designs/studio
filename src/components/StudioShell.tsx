@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import {
-  LayoutDashboard, Users, FolderKanban, CheckSquare, Receipt, Wallet, FileSignature, Tags, ClipboardList, LayoutTemplate, LogOut, Menu, Search,
+  LayoutDashboard, Users, FolderKanban, CheckSquare, Receipt, Wallet, CalendarCheck, FileSignature, Tags, ClipboardList, LayoutTemplate, LogOut, Menu, Search,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { LOGO_URL } from "@/lib/format";
@@ -16,6 +16,7 @@ export const nav = [
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/tasks", label: "Tasks", icon: CheckSquare },
   { to: "/invoices", label: "Invoices", icon: Receipt },
+  { to: "/payments", label: "Monthly payments", icon: CalendarCheck },
   { to: "/expenses", label: "Expenses", icon: Wallet },
   { to: "/proposals", label: "Proposals & Contracts", icon: FileSignature },
   { to: "/pricing", label: "Pricing", icon: Tags },

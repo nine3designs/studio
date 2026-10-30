@@ -325,69 +325,130 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const proofs = p.deliverables.filter((d: Any) => d.kind === "proof" && d.status !== "approved");
   const months = monthlyPayments(p.invoices);
 
+  const next = upcoming[0];
+  const nextKit = next ? (next.venue === "home" ? p.client.home_kit : p.client.away_kit) : null;
+  const nextGfx = next ? ((next.graphics ?? []) as { name: string; done: boolean }[]) : [];
+  const gfxDone = nextGfx.filter((x) => x.done).length;
+
+  const tabs = [
+    { v: "fixtures", l: "Fixtures" },
+    { v: "todo", l: "To-do" },
+    { v: "proofs", l: "Proofs" },
+    { v: "files", l: "Files" },
+    { v: "payments", l: "Payments" },
+    { v: "help", l: "Help" },
+  ];
+
   return (
     <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Raleway', ui-sans-serif, sans-serif" } as Any}>
-      <div className="grid gap-6 md:grid-cols-2">
-        <Kit label="Home kit" k={p.client.home_kit} />
-        <Kit label="Away kit" k={p.client.away_kit} />
-      </div>
-      <WhatNew p={p} token={token} />
-
-      {(p.tasks ?? []).length > 0 && (
-        <Section title="Graphics to-do list">
-          <ul className="space-y-2">
-            {p.tasks.map((tk: Any) => (
-              <li key={tk.id} className="flex items-start gap-3 rounded-md border bg-card p-4">
-                <Check className={`mt-0.5 h-4 w-4 ${tk.status === "done" ? "text-success" : "text-muted-foreground/30"}`} />
-                <div className="min-w-0">
-                  <p className="font-medium">{tk.title}</p>
-                  {tk.notes && <p className="text-sm text-muted-foreground">{tk.notes}</p>}
-                  <p className="mt-1 text-xs capitalize text-muted-foreground">{tk.priority} priority{tk.due_date ? ` · by ${fmtDate(tk.due_date)}` : ""}</p>
-                </div>
-              </li>
+      {next && (
+        <section className="portal-fade overflow-hidden rounded-md bg-primary-deep p-6 text-primary-foreground md:p-8">
+          <p className="eyebrow" style={{ color: "#DCE9E5" }}>Next match · {fmtDate(next.match_date)}</p>
+          <h2 className="font-heading text-3xl font-semibold">
+            {next.venue === "home" ? "vs" : "away at"} {next.opponent}
+          </h2>
+          <p className="mt-1 text-sm opacity-80">
+            {next.venue === "home" ? "Home" : "Away"}{next.competition ? ` · ${next.competition}` : ""}
+          </p>
+          <div className="mt-3 flex items-center gap-3">
+            {(["primary", "secondary"] as const).filter((c) => nextKit?.[c]).map((c) => (
+              <span key={c} className="h-6 w-6 rounded-sm border border-white/30" style={{ background: nextKit[c] }} title={nextKit[c]} />
             ))}
-          </ul>
-        </Section>
+            <span className="text-xs opacity-80">{next.venue === "home" ? "Home colours" : "Away colours"}</span>
+          </div>
+          {nextGfx.length > 0 && (
+            <div className="mt-4 max-w-xs">
+              <div className="mb-1 flex justify-between text-xs opacity-80"><span>Matchday graphics</span><span>{gfxDone}/{nextGfx.length} ready</span></div>
+              <Progress value={(gfxDone / nextGfx.length) * 100} />
+            </div>
+          )}
+        </section>
       )}
 
-      {p.client.notes && (
-        <Section title="Team sheet">
-          <div className="rounded-md border bg-card p-5"><p className="whitespace-pre-wrap text-sm leading-relaxed">{p.client.notes}</p></div>
-        </Section>
-      )}
+      <Tabs defaultValue="fixtures">
+        <MobileTabs tabs={tabs} />
+        <TabsList className="mb-8 hidden flex-wrap md:flex">
+          {tabs.map((t) => <TabsTrigger key={t.v} value={t.v}>{t.l}</TabsTrigger>)}
+        </TabsList>
 
-      <Section title="Matchday graphics to-do">
-        {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="space-y-3">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} />)}</ul>}
-      </Section>
+        <TabsContent value="fixtures" className="mt-0 space-y-8">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Kit label="Home kit" k={p.client.home_kit} />
+            <Kit label="Away kit" k={p.client.away_kit} />
+          </div>
+          <Section title="Upcoming fixtures">
+            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="space-y-3">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>}
+          </Section>
+          {past.length > 0 && (
+            <Section title="Previous fixtures">
+              <ul className="space-y-2">{past.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>
+            </Section>
+          )}
+        </TabsContent>
 
-      {proofs.length > 0 && <Section title="Graphics to review"><Proofs proofs={proofs} token={token} /></Section>}
+        <TabsContent value="todo" className="mt-0 space-y-8">
+          {(p.tasks ?? []).length > 0 && (
+            <Section title="Graphics to-do list">
+              <ul className="space-y-2">
+                {p.tasks.map((tk: Any) => (
+                  <li key={tk.id} className="flex items-start gap-3 rounded-md border bg-card p-4">
+                    <Check className={`mt-0.5 h-4 w-4 ${tk.status === "done" ? "text-success" : "text-muted-foreground/30"}`} />
+                    <div className="min-w-0">
+                      <p className="font-medium">{tk.title}</p>
+                      {tk.notes && <p className="text-sm text-muted-foreground">{tk.notes}</p>}
+                      <p className="mt-1 text-xs capitalize text-muted-foreground">{tk.priority} priority{tk.due_date ? ` · by ${fmtDate(tk.due_date)}` : ""}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+          <Section title="Matchday graphics to-do">
+            {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : <ul className="space-y-3">{upcoming.map((f: Any) => <Fixture key={f.id} f={f} client={p.client} />)}</ul>}
+          </Section>
+          {p.client.notes && (
+            <Section title="Team sheet">
+              <div className="rounded-md border bg-card p-5"><p className="whitespace-pre-wrap text-sm leading-relaxed">{p.client.notes}</p></div>
+            </Section>
+          )}
+        </TabsContent>
 
-      <Section title="Weekly templates"><FileGrid files={templates} empty="No templates shared yet." /></Section>
+        <TabsContent value="proofs" className="mt-0">
+          {proofs.length === 0 ? <Empty>Nothing to review right now · new proofs will appear here.</Empty> : <Proofs proofs={proofs} token={token} />}
+        </TabsContent>
 
-      <Section title="Resource photos">
-        <div className="space-y-4">
-          <UploadBox token={token} kind="resource" label="Upload player photos, sponsor logos or match photos" />
-          <FileGrid files={resources} empty="No photos uploaded yet." />
-        </div>
-      </Section>
+        <TabsContent value="files" className="mt-0 space-y-8">
+          <Section title="Weekly templates"><FileGrid files={templates} empty="No templates shared yet." /></Section>
+          <Section title="Resource photos">
+            <div className="space-y-4">
+              <UploadBox token={token} kind="resource" label="Upload player photos, sponsor logos or match photos" />
+              <FileGrid files={resources} empty="No photos uploaded yet." />
+            </div>
+          </Section>
+          <Section title="Completed work archive">
+            <FavFileGrid p={p} token={token} files={archive} empty="Finished graphics will appear here." />
+          </Section>
+        </TabsContent>
 
-      <Section title="Completed work archive">
-        <FavFileGrid p={p} token={token} files={archive} empty="Finished graphics will appear here." />
-        {past.length > 0 && <ul className="mt-4 space-y-2">{past.map((f: Any) => <Fixture key={f.id} f={f} />)}</ul>}
-      </Section>
+        <TabsContent value="payments" className="mt-0">
+          <Section title="Monthly payments">
+            {p.client.monthly_fee && <p className="mb-3 text-sm text-muted-foreground">Monthly package: <span className="font-medium text-foreground">{money(p.client.monthly_fee)}</span></p>}
+            {months.length === 0 ? <Empty>No invoices yet.</Empty> : (
+              <table className="w-full text-sm">
+                <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="py-2">Month</th><th className="py-2 text-right">Billed</th><th className="py-2 text-right">Paid</th><th className="py-2 text-right">Owed</th></tr></thead>
+                <tbody>{months.map((m) => (
+                  <tr key={m.month} className="border-t"><td className="py-2">{new Date(m.month + "-01T00:00:00").toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</td><td className="py-2 text-right">{money(m.billed)}</td><td className="py-2 text-right text-success">{money(m.paid)}</td><td className={`py-2 text-right ${m.owed ? "font-semibold text-destructive" : ""}`}>{money(m.owed)}</td></tr>
+                ))}</tbody>
+              </table>
+            )}
+          </Section>
+        </TabsContent>
 
-      <Section title="Monthly payments">
-        {p.client.monthly_fee && <p className="mb-3 text-sm text-muted-foreground">Monthly package: <span className="font-medium text-foreground">{money(p.client.monthly_fee)}</span></p>}
-        {months.length === 0 ? <Empty>No invoices yet.</Empty> : (
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="py-2">Month</th><th className="py-2 text-right">Billed</th><th className="py-2 text-right">Paid</th><th className="py-2 text-right">Owed</th></tr></thead>
-            <tbody>{months.map((m) => (
-              <tr key={m.month} className="border-t"><td className="py-2">{new Date(m.month + "-01T00:00:00").toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</td><td className="py-2 text-right">{money(m.billed)}</td><td className="py-2 text-right text-success">{money(m.paid)}</td><td className={`py-2 text-right ${m.owed ? "font-semibold text-destructive" : ""}`}>{money(m.owed)}</td></tr>
-            ))}</tbody>
-          </table>
-        )}
-      </Section>
-      <Section title="Help & FAQs"><HelpCentre /></Section>
+        <TabsContent value="help" className="mt-0 space-y-8">
+          <WhatNew p={p} token={token} />
+          <Section title="Help & FAQs"><HelpCentre /></Section>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -408,13 +469,17 @@ function Kit({ label, k }: { label: string; k: Any }) {
   );
 }
 
-function Fixture({ f }: { f: Any }) {
+function Fixture({ f, client }: { f: Any; client?: Any }) {
   const g = (f.graphics ?? []) as { name: string; done: boolean }[];
   const done = g.filter((x) => x.done).length;
+  const kit = client ? (f.venue === "home" ? client.home_kit : client.away_kit) : null;
+  const dots = kit ? (["primary", "secondary"] as const).filter((c) => kit[c]) : [];
   return (
-    <li className="rounded-md border p-4">
+    <li className="rounded-md border p-4 transition-colors hover:border-primary/40">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-medium">{fmtDate(f.match_date)} · vs {f.opponent} <span className="text-xs uppercase text-muted-foreground">({f.venue}{f.competition ? ` · ${f.competition}` : ""})</span></p>
+        <p className="flex flex-wrap items-center gap-2 font-medium">
+          {dots.length > 0 && <span className="flex gap-1">{dots.map((c) => <span key={c} className="h-2.5 w-2.5 rounded-full border border-black/10" style={{ background: kit[c] }} />)}</span>}
+          {fmtDate(f.match_date)} · vs {f.opponent} <span className="text-xs uppercase text-muted-foreground">({f.venue}{f.competition ? ` · ${f.competition}` : ""})</span></p>
         <span className="text-xs text-muted-foreground">{done}/{g.length} ready</span>
       </div>
       <div className="mt-2 flex flex-wrap gap-2">{g.map((x, i) => (
