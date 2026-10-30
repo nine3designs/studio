@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Empty, StatusBadge } from "@/components/common";
 import { supabase } from "@/integrations/supabase/client";
 import { getPortal, portalAction } from "@/lib/portal.functions";
-import { effectiveStatus, fmtDate, invoiceTotals, LOGO_URL, money, monthlyPayments, type LineItem } from "@/lib/format";
+import { effectiveStatus, fmtDate, invoiceTotals, LOGO_URL, money, type LineItem } from "@/lib/format";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -24,7 +24,7 @@ export function PortalView({ token }: { token: string | null }) {
   if (q.error) return <Shell><Empty>{(q.error as Error).message}</Empty></Shell>;
   const p = q.data!;
   return (
-    <Shell name={p.client.company || p.client.name}>
+    <Shell name={p.client.company || p.client.name} tone={p.client.portal_type === "sports" ? "sports" : undefined}>
       {p.client.portal_type === "sports" ? <SportsPortal p={p} token={token} /> : <StandardPortal p={p} token={token} />}
     </Shell>
   );
@@ -56,7 +56,7 @@ function MobileTabs({ tabs }: { tabs: { v: string; l: string }[] }) {
   );
 }
 
-function Shell({ children, name }: { children: ReactNode; name?: string }) {
+function Shell({ children, name, tone }: { children: ReactNode; name?: string; tone?: "sports" }) {
   return (
     <div className="min-h-screen bg-background">
       <style>{`
@@ -70,7 +70,7 @@ function Shell({ children, name }: { children: ReactNode; name?: string }) {
         .portal-logo-load { animation: logoPulse 1.6s ease-in-out infinite; }
         @keyframes logoPulse { 0%,100% { opacity: .8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
       `}</style>
-      <header className="bg-primary-deep text-primary-foreground">
+      <header className="bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "#0E55AF" } : undefined}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-6">
           <img src={LOGO_URL} alt="Nine3 Designs" className="h-16 md:h-20" />
         </div>
@@ -323,7 +323,16 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const resources = p.deliverables.filter((d: Any) => d.uploaded_by === "client");
   const archive = p.deliverables.filter((d: Any) => d.kind === "completed" || d.kind === "deliverable" || (d.kind === "proof" && d.status === "approved"));
   const proofs = p.deliverables.filter((d: Any) => d.kind === "proof" && d.status !== "approved");
-  const months = monthlyPayments(p.invoices);
+  const cfg = (p.client.portal_prefs ?? {}).monthly_config ?? null;
+  const payMonths: { key: string; label: string; paid: boolean }[] = [];
+  if (cfg?.start && cfg?.count) {
+    const [sy, sm] = String(cfg.start).split("-").map(Number);
+    for (let i = 0; i < Number(cfg.count); i++) {
+      const d = new Date(Date.UTC(sy, sm - 1 + i, 1));
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+      payMonths.push({ key, label: d.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }), paid: !!(p.client.portal_prefs?.monthly ?? {})[key]?.paid });
+    }
+  }
 
   const next = upcoming[0];
   const nextKit = next ? (next.venue === "home" ? p.client.home_kit : p.client.away_kit) : null;
@@ -342,8 +351,8 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   return (
     <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Raleway', ui-sans-serif, sans-serif" } as Any}>
       {next && (
-        <section className="portal-fade overflow-hidden rounded-md bg-primary-deep p-6 text-primary-foreground md:p-8">
-          <p className="eyebrow" style={{ color: "#DCE9E5" }}>Next match · {fmtDate(next.match_date)}</p>
+        <section className="portal-fade overflow-hidden rounded-md p-6 text-white md:p-8" style={{ background: "#0E55AF" }}>
+          <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {fmtDate(next.match_date)}</p>
           <h2 className="font-heading text-3xl font-semibold">
             {next.venue === "home" ? "vs" : "away at"} {next.opponent}
           </h2>
@@ -431,16 +440,19 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
         </TabsContent>
 
         <TabsContent value="payments" className="mt-0">
-          <Section title="Monthly payments">
-            {p.client.monthly_fee && <p className="mb-3 text-sm text-muted-foreground">Monthly package: <span className="font-medium text-foreground">{money(p.client.monthly_fee)}</span></p>}
-            {months.length === 0 ? <Empty>No invoices yet.</Empty> : (
-              <table className="w-full text-sm">
-                <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="py-2">Month</th><th className="py-2 text-right">Billed</th><th className="py-2 text-right">Paid</th><th className="py-2 text-right">Owed</th></tr></thead>
-                <tbody>{months.map((m) => (
-                  <tr key={m.month} className="border-t"><td className="py-2">{new Date(m.month + "-01T00:00:00").toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</td><td className="py-2 text-right">{money(m.billed)}</td><td className="py-2 text-right text-success">{money(m.paid)}</td><td className={`py-2 text-right ${m.owed ? "font-semibold text-destructive" : ""}`}>{money(m.owed)}</td></tr>
-                ))}</tbody>
-              </table>
+          <Section title="Monthly package">
+            {p.client.monthly_fee && <p className="mb-4 text-sm text-muted-foreground">Monthly package: <span className="font-medium text-foreground">{money(p.client.monthly_fee)}</span></p>}
+            {payMonths.length === 0 ? <Empty>Payment plan coming soon.</Empty> : (
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {payMonths.map((m: Any) => (
+                  <li key={m.key} className={`flex items-center justify-between rounded-md border px-4 py-3 text-sm ${m.paid ? "border-success/40 bg-success/5" : ""}`}>
+                    <span className="font-medium">{m.label}</span>
+                    <span className={`text-xs font-medium ${m.paid ? "text-success" : "text-muted-foreground"}`}>{m.paid ? "Paid" : "Upcoming"}</span>
+                  </li>
+                ))}
+              </ul>
             )}
+            <p className="mt-4 text-xs text-muted-foreground">Invoices are issued monthly · any questions, just ask.</p>
           </Section>
         </TabsContent>
 

@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { Empty, PageHeader, StatCard } from "@/components/common";
 import { useRows, useSave } from "@/lib/db";
-import { effectiveStatus, fmtDate, invoiceTotals, money } from "@/lib/format";
+import { money } from "@/lib/format";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -13,45 +13,71 @@ export const Route = createFileRoute("/_authenticated/payments")({
   component: Payments,
 });
 
-function Payments() {
-  const invoices = useRows("invoices", { select: "*, clients(name, monthly_fee, portal_type, portal_enabled)", order: "due_date", asc: true }).data ?? [];
-  const save = useSave("invoices");
+type MonthRow = { key: string; label: string; amount: number; paid: boolean; paidAt?: string; overdue: boolean };
 
-  const sports = new Map<string, Any>();
-  for (const i of invoices) {
-    const c = i.clients;
-    if (!c || c.portal_type !== "sports") continue;
-    if (!sports.has(c.name)) sports.set(c.name, { client: c, list: [] });
-    sports.get(c.name)!.list.push(i);
+function buildMonths(c: Any, today: Date): MonthRow[] {
+  const cfg = c.portal_prefs?.monthly_config ?? null;
+  if (!cfg?.start || !cfg?.count) return [];
+  const amount = Number(cfg.amount ?? c.monthly_fee ?? 0);
+  const monthly = (c.portal_prefs?.monthly ?? {}) as Record<string, Any>;
+  const [y, m] = String(cfg.start).split("-").map(Number);
+  const rows: MonthRow[] = [];
+  for (let i = 0; i < Number(cfg.count); i++) {
+    const d = new Date(Date.UTC(y, m - 1 + i, 1));
+    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+    const e = monthly[key] ?? {};
+    rows.push({
+      key,
+      label: d.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }),
+      amount: Number(e.amount ?? amount),
+      paid: !!e.paid,
+      paidAt: e.paid_at,
+      overdue: !e.paid && d.getTime() < Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1),
+    });
   }
+  return rows;
+}
 
-  async function toggle(inv: Any) {
-    const paid = inv.status === "paid";
-    await save.mutateAsync(
-      paid
-        ? { id: inv.id, status: "sent", paid_at: null }
-        : { id: inv.id, status: "paid", paid_at: new Date().toISOString().slice(0, 10) },
-    );
-    toast.success(paid ? "Marked as unpaid" : `${inv.number} marked as paid · ${money(invoiceTotals(inv.items, inv.tax_rate).total)}`);
+function Payments() {
+  const clients = useRows("clients").data ?? [];
+  const save = useSave("clients");
+  const sports = clients.filter((c: Any) => c.portal_type === "sports" && c.monthly_fee);
+
+  async function toggle(c: Any, month: MonthRow) {
+    const prefs = { ...(c.portal_prefs ?? {}) };
+    const monthly = { ...(prefs.monthly ?? {}) };
+    const entry = { ...(monthly[month.key] ?? {}) };
+    if (entry.paid) {
+      delete entry.paid;
+      delete entry.paid_at;
+    } else {
+      entry.paid = true;
+      entry.paid_at = new Date().toISOString().slice(0, 10);
+    }
+    monthly[month.key] = entry;
+    await save.mutateAsync({ id: c.id, portal_prefs: { ...prefs, monthly } });
+    toast.success(entry.paid ? `${month.label} marked as paid · ${money(month.amount)}` : `${month.label} marked as unpaid`);
   }
 
   return (
     <div>
-      <PageHeader eyebrow="Money" title="Monthly payments" subtitle="Retainer packages at a glance — tick a box when the money lands." />
-      {sports.size === 0 ? <Empty>No monthly-package clients yet.</Empty> : (
+      <PageHeader eyebrow="Money" title="Monthly payments" subtitle="Retainer packages at a glance · tick a box when the money lands." />
+      {sports.length === 0 ? <Empty>No monthly-package clients yet.</Empty> : (
         <div className="space-y-10">
-          {[...sports.values()].map(({ client, list }) => {
-            const paid = list.filter((i: Any) => i.status === "paid").reduce((s: number, i: Any) => s + invoiceTotals(i.items, i.tax_rate).total, 0);
-            const outstanding = list.filter((i: Any) => effectiveStatus(i) === "sent").reduce((s: number, i: Any) => s + invoiceTotals(i.items, i.tax_rate).total, 0);
-            const overdue = list.filter((i: Any) => effectiveStatus(i) === "overdue").reduce((s: number, i: Any) => s + invoiceTotals(i.items, i.tax_rate).total, 0);
-            const nextDue = list.find((i: Any) => effectiveStatus(i) !== "paid");
+          {sports.map((c: Any) => {
+            const today = new Date();
+            const months = buildMonths(c, today);
+            const paid = months.filter((m) => m.paid).reduce((s, m) => s + m.amount, 0);
+            const overdue = months.filter((m) => m.overdue).reduce((s, m) => s + m.amount, 0);
+            const outstanding = months.filter((m) => !m.paid && !m.overdue).reduce((s, m) => s + m.amount, 0);
+            const nextDue = months.find((m) => !m.paid);
             return (
-              <section key={client.name}>
+              <section key={c.id}>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="eyebrow">{client.monthly_fee ? `Monthly package · ${money(client.monthly_fee)}` : "Monthly payments"}</p>
-                    <h2 className="font-heading text-2xl font-semibold text-primary-deep">{client.name}</h2>
-                    {nextDue && <p className="mt-1 text-sm text-muted-foreground">Next due {fmtDate(nextDue.due_date)} · {nextDue.number}</p>}
+                    <p className="eyebrow">Monthly package · {money(c.monthly_fee)}</p>
+                    <h2 className="font-heading text-2xl font-semibold text-primary-deep">{c.name}</h2>
+                    {nextDue && <p className="mt-1 text-sm text-muted-foreground">Next due {nextDue.label}</p>}
                   </div>
                 </div>
                 <div className="mb-5 grid gap-4 sm:grid-cols-3">
@@ -59,36 +85,36 @@ function Payments() {
                   <StatCard label="Outstanding" value={money(outstanding)} />
                   <StatCard label="Overdue" value={<span className={overdue > 0 ? "text-destructive" : ""}>{money(overdue)}</span>} />
                 </div>
-                <div className="overflow-x-auto rounded-md border bg-card">
-                  <table className="w-full text-sm">
-                    <thead className="bg-cream text-left text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="p-3">Month</th><th className="p-3">Invoice</th><th className="p-3">Due</th><th className="p-3 text-right">Amount</th><th className="p-3">Status</th><th className="p-3 text-center">Paid</th></tr></thead>
-                    <tbody>
-                      {list.map((i: Any) => {
-                        const st = effectiveStatus(i);
-                        const paid = st === "paid";
-                        return (
-                          <tr key={i.id} className={`border-t transition-colors ${paid ? "bg-success/5" : ""}`}>
-                            <td className="p-3 font-medium">{monthLabel(i.due_date ?? i.issue_date)}</td>
-                            <td className="p-3"><Link to="/invoices/$id" params={{ id: i.id }} className="font-medium hover:text-primary-soft">{i.number}</Link></td>
-                            <td className="p-3">{fmtDate(i.due_date)}</td>
-                            <td className="p-3 text-right">{money(invoiceTotals(i.items, i.tax_rate).total)}</td>
-                            <td className="p-3"><span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${paid ? "bg-success/15 text-success" : st === "overdue" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>{paid ? "Paid" : st === "overdue" ? "Overdue" : "Outstanding"}</span></td>
+                {months.length === 0 ? <Empty>Set a start month for this package (ask Juno to seed it).</Empty> : (
+                  <div className="overflow-x-auto rounded-md border bg-card">
+                    <table className="w-full text-sm">
+                      <thead className="bg-cream text-left text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="p-3">Month</th><th className="p-3 text-right">Amount</th><th className="p-3">Status</th><th className="p-3 text-center">Paid</th></tr></thead>
+                      <tbody>
+                        {months.map((m) => (
+                          <tr key={m.key} className={`border-t transition-colors ${m.paid ? "bg-success/5" : m.overdue ? "bg-destructive/5" : ""}`}>
+                            <td className="p-3 font-medium">{m.label}</td>
+                            <td className="p-3 text-right">{money(m.amount)}</td>
+                            <td className="p-3">
+                              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${m.paid ? "bg-success/15 text-success" : m.overdue ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                                {m.paid ? `Paid${m.paidAt ? ` · ${m.paidAt}` : ""}` : m.overdue ? "Overdue" : "Outstanding"}
+                              </span>
+                            </td>
                             <td className="p-3 text-center">
                               <button
                                 type="button"
-                                onClick={() => toggle(i)}
-                                aria-label={paid ? `Mark ${i.number} unpaid` : `Mark ${i.number} paid`}
-                                className={`inline-flex h-6 w-6 items-center justify-center rounded-sm border transition-all ${paid ? "border-success bg-success text-white" : "border-muted-foreground/40 bg-background hover:border-success hover:bg-success/10"}`}
+                                onClick={() => toggle(c, m)}
+                                aria-label={m.paid ? `Mark ${m.label} unpaid` : `Mark ${m.label} paid`}
+                                className={`inline-flex h-6 w-6 items-center justify-center rounded-sm border transition-all ${m.paid ? "border-success bg-success text-white" : "border-muted-foreground/40 bg-background hover:border-success hover:bg-success/10"}`}
                               >
-                                {paid && <Check className="h-4 w-4" />}
+                                {m.paid && <Check className="h-4 w-4" />}
                               </button>
                             </td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </section>
             );
           })}
@@ -96,8 +122,4 @@ function Payments() {
       )}
     </div>
   );
-}
-
-function monthLabel(d: string) {
-  return new Date(d + "T00:00:00").toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 }
