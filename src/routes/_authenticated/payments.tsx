@@ -59,7 +59,7 @@ function Donut({ pct }: { pct: number }) {
       <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
         <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(23,75,80,.1)" strokeWidth="9" />
         <circle cx="50" cy="50" r={r} fill="none" stroke="url(#goldgrad)" strokeWidth="9" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={off} style={{ transition: "stroke-dashoffset 1s ease" }} />
-        <defs><linearGradient id="goldgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#174B50" /><stop offset="100%" stopColor="#C8A96A" /></linearGradient></defs>
+        <defs><linearGradient id="goldgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#174B50" /><stop offset="100%" stopColor="#B7C2C4" /></linearGradient></defs>
       </svg>
       <div className="absolute text-center"><p className="font-heading text-2xl font-bold text-primary-deep">{pct}%</p><p className="text-[10px] uppercase tracking-widest text-muted-foreground">collected</p></div>
     </div>

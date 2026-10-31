@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Empty, StatusBadge } from "@/components/common";
 import { supabase } from "@/integrations/supabase/client";
 import { getPortal, portalAction } from "@/lib/portal.functions";
-import { effectiveStatus, fmtDate, invoiceTotals, LOGO_URL, money, type LineItem } from "@/lib/format";
+import { effectiveStatus, fmtDate, invoiceTotals, LOGO_MARK_URL, LOGO_URL, money, type LineItem } from "@/lib/format";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -155,7 +155,7 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
       <header className="relative overflow-hidden bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "linear-gradient(180deg,#0E55AF,#0A4384)" } : undefined}>
         <div className="hero-bg-lines" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2.5 px-6 pb-7 pt-9 text-center md:pt-11">
-          <img src={LOGO_URL} alt="Nine3 Designs" className="h-20 w-auto md:h-28" style={{ filter: "drop-shadow(0 8px 22px rgba(0,0,0,.4))" }} />
+          <img src={LOGO_MARK_URL} alt="Nine3 Designs" className="h-20 w-auto md:h-28" style={{ filter: "drop-shadow(0 8px 22px rgba(0,0,0,.4))" }} />
           <div className="h-px w-28 rounded-full bg-gradient-to-r from-transparent via-white/45 to-transparent" />
           <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">Client Portal</p>
         </div>
@@ -847,7 +847,7 @@ function PortalLoader() {
   return (
     <div className="flex min-h-[62vh] flex-col items-center justify-center text-center">
       <div className="load-orb relative flex items-center justify-center rounded-full">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-24 w-auto md:h-32" style={{ filter: "drop-shadow(0 6px 18px rgba(23,75,80,.35))" }} />
+        <img src={LOGO_MARK_URL} alt="Nine3 Designs" className="portal-logo-load h-28 w-auto md:h-40" style={{ filter: "drop-shadow(0 6px 18px rgba(23,75,80,.35))" }} />
       </div>
       <p className="eyebrow mt-8">Preparing your portal</p>
       <div className="load-bar mt-4"><span /></div>
@@ -855,7 +855,7 @@ function PortalLoader() {
   );
 }
 
-const CONFETTI_COLORS = ["#174B50", "#C8A96A", "#7EC8E3", "#FFD520", "#0E55AF", "#EFECE5"];
+const CONFETTI_COLORS = ["#174B50", "#B7C2C4", "#7EC8E3", "#F5F1E8", "#0E55AF", "#EFECE5"];
 
 function Confetti({ count = 90 }: { count?: number }) {
   const [pieces] = useState(() => Array.from({ length: count }, (_, i) => ({

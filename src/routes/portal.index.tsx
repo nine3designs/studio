@@ -45,10 +45,10 @@ function EmailPortal() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-6 text-primary-foreground" style={{ background: "linear-gradient(165deg,#0A2B31 0%,#123E42 45%,#174B50 100%)" }}>
-      <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "radial-gradient(600px 400px at 85% 0%, rgba(200,169,106,.18), transparent 55%), radial-gradient(500px 360px at 8% 100%, rgba(255,255,255,.06), transparent 50%)" }} aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "radial-gradient(600px 400px at 85% 0%, rgba(183,194,196,.18), transparent 55%), radial-gradient(500px 360px at 8% 100%, rgba(255,255,255,.06), transparent 50%)" }} aria-hidden="true" />
       <img src={LOGO_URL} alt="Nine3 Designs" className="relative h-20 w-auto md:h-24" style={{ filter: "drop-shadow(0 10px 26px rgba(0,0,0,.45))" }} />
       <div className="relative mt-5 h-px w-28 rounded-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-      <p className="relative mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-[#EBCE9A]">Client portal</p>
+      <p className="relative mt-4 text-xs font-semibold uppercase tracking-[0.3em] text-[#B7C2C4]">Client portal</p>
       <form className="relative mt-8 w-full max-w-sm space-y-4 rounded-2xl border border-white/50 bg-white/90 p-6 text-card-foreground shadow-[0_30px_80px_rgba(0,0,0,.35)] backdrop-blur" onSubmit={async (e) => {
         e.preventDefault();
         const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + "/portal" } });

@@ -62,7 +62,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col md:flex-row">
       {/* Mobile top bar */}
       <div className="no-print flex items-center justify-between bg-sidebar p-4 text-sidebar-foreground md:hidden">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="h-12 w-auto max-w-[62vw] object-contain" />
+        <img src={LOGO_URL} alt="Nine3 Designs" className="h-16 w-auto max-w-[72vw] object-contain" />
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="border-sidebar-accent bg-transparent text-sidebar-foreground hover:bg-sidebar-accent">

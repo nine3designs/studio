@@ -74,18 +74,18 @@ function Dashboard() {
           <div className="relative grid grid-cols-1 gap-4 md:flex md:flex-wrap md:items-center md:gap-5">
             <div className="flex items-center gap-4">
             {kits.badge ? <img src={kits.badge} alt="badge" className="h-14 w-14 shrink-0 rounded-xl bg-white/10 object-contain p-1 ring-1 ring-white/25" /> : (
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur"><CalendarDays className="h-7 w-7 text-[#FFD520]" /></div>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur"><CalendarDays className="h-7 w-7 text-[#B7C2C4]" /></div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {nextClient.name}</p>
+              <p className="eyebrow" style={{ color: "#B7C2C4" }}>Next match · {nextClient.name}</p>
               <h2 className="font-heading text-2xl font-bold tracking-tight md:text-3xl">{next.venue === "home" ? "vs" : "away at"} {next.opponent}</h2>
-              <div className="dash-underline mt-2" style={{ background: "linear-gradient(90deg,#FFD520,rgba(255,255,255,.8))" }} />
+              <div className="dash-underline mt-2" style={{ background: "linear-gradient(90deg,#B7C2C4,rgba(255,255,255,.8))" }} />
               <p className="mt-2 text-sm text-white/75">{fmtDate(next.match_date)} · {next.venue === "home" ? "Home" : "Away"}{next.competition ? ` · ${next.competition}` : ""}</p>
             </div>
             </div>
             <div className="flex flex-col gap-2 md:ml-auto">
               <Link to="/tasks" className="rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-center text-sm font-semibold backdrop-blur transition-colors hover:bg-white/20">Graphics to-do ({tasks.filter((t) => t.status !== "done" && t.client_id === next.client_id).length})</Link>
-              {nextClient.portal_token && <a href={portalLink(nextClient.portal_token)} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-[#FFD520] px-5 py-2.5 text-sm font-semibold text-[#0A2547] shadow-lg transition-transform hover:scale-[1.03]">Open portal <ExternalLink className="h-4 w-4" /></a>}
+              {nextClient.portal_token && <a href={portalLink(nextClient.portal_token)} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-[#F5F1E8] px-5 py-2.5 text-sm font-semibold text-[#174B50] shadow-lg transition-transform hover:scale-[1.03]">Open portal <ExternalLink className="h-4 w-4" /></a>}
             </div>
           </div>
         </section>
@@ -102,8 +102,8 @@ function Dashboard() {
           <h2 className="font-heading text-lg font-bold tracking-tight text-white">Quick Links</h2>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
             {nav.map(({ to, label, icon: Icon }) => (
-              <Link key={to} to={to as never} className="group flex flex-col items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-2 py-3.5 text-center transition-all hover:-translate-y-0.5 hover:border-[#FFD520]/60 hover:bg-white/15 hover:shadow-md">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[#FFD520] transition group-hover:bg-[#FFD520] group-hover:text-[#0A2547]"><Icon className="h-4 w-4" /></span>
+              <Link key={to} to={to as never} className="group flex flex-col items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-2 py-3.5 text-center transition-all hover:-translate-y-0.5 hover:border-[#B7C2C4]/60 hover:bg-white/15 hover:shadow-md">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[#B7C2C4] transition group-hover:bg-[#B7C2C4] group-hover:text-[#174B50]"><Icon className="h-4 w-4" /></span>
                 <span className="text-xs font-semibold text-white">{label}</span>
               </Link>
             ))}
@@ -115,7 +115,7 @@ function Dashboard() {
                 <div key={c.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/15 bg-white/10 p-2.5">
                   <span className="min-w-0 truncate text-sm font-medium text-white">{c.name}</span>
                   <div className="flex shrink-0 gap-1.5">
-                    {c.portal_token && <a href={portalLink(c.portal_token)} target="_blank" rel="noreferrer" className="rounded-full bg-[#FFD520] px-3 py-1.5 text-xs font-semibold text-[#0A2547] transition hover:bg-white">Portal</a>}
+                    {c.portal_token && <a href={portalLink(c.portal_token)} target="_blank" rel="noreferrer" className="rounded-full bg-[#F5F1E8] px-3 py-1.5 text-xs font-semibold text-[#174B50] transition hover:bg-white">Portal</a>}
                     <Link to="/tasks" className="rounded-full border border-white/25 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10">Tasks</Link>
                   </div>
                 </div>
@@ -200,14 +200,14 @@ function Dashboard() {
 
       <style>{`
         .dash-wrap { background: linear-gradient(155deg,#F8F4EB 0%,#F1EDE4 30%,#DCE9E5 68%,#EFE3CE 100%); }
-        .dash-glow { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 85% 5%, rgba(200,169,106,.18), transparent 45%), radial-gradient(circle at 5% 90%, rgba(23,75,80,.08), transparent 40%); }
+        .dash-glow { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 85% 5%, rgba(183,194,196,.22), transparent 45%), radial-gradient(circle at 5% 90%, rgba(23,75,80,.08), transparent 40%); }
         .dash-glow + * { position: relative; }
         .dash-hero { background: linear-gradient(120deg,#174B50 0%,#0F3A40 55%,#0A2B31 100%); box-shadow: 0 24px 60px -24px rgba(23,75,80,.55); }
-        .hero-bg-lines { position: absolute; inset: 0; pointer-events: none; background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.06) 0 1px, transparent 1px 30px), radial-gradient(circle at 88% 15%, rgba(255,213,32,.18), transparent 50%); }
-        .dash-underline { height: 4px; width: 110px; border-radius: 999px; background: linear-gradient(90deg,#C8A96A,rgba(23,75,80,.25)); animation: dashshine 2.8s ease-in-out infinite; }
+        .hero-bg-lines { position: absolute; inset: 0; pointer-events: none; background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.06) 0 1px, transparent 1px 30px), radial-gradient(circle at 88% 15%, rgba(183,194,196,.14), transparent 50%); }
+        .dash-underline { height: 4px; width: 110px; border-radius: 999px; background: linear-gradient(90deg,#B7C2C4,rgba(23,75,80,.25)); animation: dashshine 2.8s ease-in-out infinite; }
         @keyframes dashshine { 0%,100% { width: 110px; opacity: .95; } 50% { width: 190px; opacity: .55; } }
         .zd-progress { height: 8px; border-radius: 999px; background: rgba(23,75,80,.1); overflow: hidden; }
-        .zd-progress span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg,#174B50,#C8A96A); transition: width .6s ease; }
+        .zd-progress span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg,#174B50,#B7C2C4); transition: width .6s ease; }
         @media (prefers-reduced-motion: reduce) { .dash-underline { animation: none; } }
         @media (max-width: 640px) { .dash-wrap { padding: 1rem !important; border-radius: 1.25rem !important; } .dash-hero { padding: 1.1rem !important; } .dash-hero h2 { font-size: 1.3rem !important; } }
       `}</style>
