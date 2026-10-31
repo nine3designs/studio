@@ -96,7 +96,7 @@ function Dashboard() {
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <section className="zd-card lg:col-span-2 rounded-2xl border border-white/60 bg-white/70 p-5 shadow-[0_10px_30px_-18px_rgba(23,75,80,.35)] backdrop-blur">
-          <div className="mb-1 flex items-center justify-between gap-3">
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="font-heading text-lg font-bold tracking-tight text-primary-deep">Your Task Timeline</h2>
               <p className="text-xs text-muted-foreground">{doneTasks.length}/{tasks.length} done· see your progress take shape</p>

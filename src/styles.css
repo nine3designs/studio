@@ -221,3 +221,54 @@ body {
 [cmdk-item] { border-radius: .65rem; transition: background .15s ease; }
 [cmdk-item][data-selected="true"] { background: rgba(23,75,80,.09) !important; }
 [cmdk-group-heading] { font-family: "Jost", sans-serif !important; letter-spacing: .14em; text-transform: uppercase; font-size: .65rem !important; color: rgba(23,75,80,.55) !important; }
+
+/* ---- Zenova studio-wide pass: one look across every page ---- */
+.dash-wrap {
+  background:
+    radial-gradient(900px 480px at 88% -5%, rgba(200,169,106,.16), transparent 55%),
+    radial-gradient(800px 460px at -8% 105%, rgba(23,75,80,.09), transparent 50%),
+    linear-gradient(160deg, #F8F4EB 0%, #F1EDE4 32%, #DCE9E5 70%, #EFE3CE 100%);
+}
+.dash-glow { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 85% 5%, rgba(200,169,106,.18), transparent 45%), radial-gradient(circle at 5% 90%, rgba(23,75,80,.08), transparent 40%); }
+.dash-glow + * { position: relative; }
+.dash-underline { height: 4px; width: 110px; border-radius: 999px; background: linear-gradient(90deg,#C8A96A,rgba(23,75,80,.25)); animation: dashshine 2.8s ease-in-out infinite; }
+@keyframes dashshine { 0%,100% { width: 110px; opacity: .95; } 50% { width: 190px; opacity: .55; } }
+.zd-progress { height: 8px; border-radius: 999px; background: rgba(23,75,80,.1); overflow: hidden; }
+.zd-progress span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg,#174B50,#C8A96A); transition: width .6s ease; }
+.studio-main {
+  background:
+    radial-gradient(1000px 520px at 90% -8%, rgba(200,169,106,.12), transparent 55%),
+    radial-gradient(900px 500px at -10% 108%, rgba(23,75,80,.07), transparent 52%),
+    linear-gradient(165deg, #F8F5EE 0%, #F2EEE5 40%, #E9EFE9 100%);
+}
+.studio-main .bg-card, main .bg-card { border-radius: 1rem; }
+.studio-main table { border-collapse: separate; border-spacing: 0; }
+.studio-main thead th { font-family: "Jost", sans-serif; letter-spacing: .12em; }
+.studio-main input, .studio-main select, .studio-main textarea { border-radius: .65rem !important; }
+.studio-main .btn-rounded, .studio-main button[class*="rounded"] { transition: transform .15s ease, box-shadow .2s ease; }
+
+/* Portal loader orb */
+.load-orb {
+  width: 10.5rem; height: 10.5rem;
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.85), rgba(255,255,255,.45));
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 30px 80px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.35);
+}
+.load-orb::before {
+  content: ""; position: absolute; inset: -9px; border-radius: 9999px;
+  background: conic-gradient(from 0deg, #FFD520, #7EC8E3, #174B50, #C8A96A, #FFD520);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  animation: orbspeed 1.5s linear infinite;
+}
+@keyframes orbspeed { to { transform: rotate(360deg); } }
+@media (min-width: 768px) { .load-orb { width: 12.5rem; height: 12.5rem; } }
+@media (prefers-reduced-motion: reduce) { .load-orb::before { animation: none; } }
+
+/* ---- Mobile overflow guards ---- */
+html, body { overflow-x: clip; }
+.dash-wrap, .dash-wrap * { min-width: 0; }
+.dash-wrap .min-w-52 { min-width: 0; }
+@media (max-width: 640px) {
+  .dash-wrap { padding: 1rem !important; border-radius: 1.25rem !important; }
+}

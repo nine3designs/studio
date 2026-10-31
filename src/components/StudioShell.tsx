@@ -62,7 +62,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col md:flex-row">
       {/* Mobile top bar */}
       <div className="no-print flex items-center justify-between bg-sidebar p-4 text-sidebar-foreground md:hidden">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="h-16" />
+        <img src={LOGO_URL} alt="Nine3 Designs" className="h-10 w-auto max-w-[58vw] object-contain" />
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="border-sidebar-accent bg-transparent text-sidebar-foreground hover:bg-sidebar-accent">
@@ -91,7 +91,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
         </button>
         <div className="px-3 pb-3"><NavLinks /></div>
       </aside>
-      <main className="flex-1 px-5 py-8 md:px-10">
+      <main className="studio-main flex-1 px-5 py-8 md:px-10">
         {children}
         <footer className="mt-16 border-t pt-6 text-center text-xs text-muted-foreground">
           Nine3 Studio · crafted by <a href="https://nine3designs.co.uk" target="_blank" rel="noreferrer" className="underline-offset-2 hover:underline">Nine3 Designs</a> · Your Vision. Our Design.

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Heart, HelpCircle, Menu, PartyPopper, Upload, X, Home, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Heart, HelpCircle, Image as ImageIcon, Menu, PartyPopper, Upload, X, Home, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,7 +92,7 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         .sports-hero::after { content: ""; position: absolute; right: -70px; top: -70px; width: 280px; height: 280px; background: radial-gradient(circle, rgba(255,213,32,.28), transparent 70%); border-radius: 50%; pointer-events: none; }
         .sports [role="progressbar"] { background: rgba(255,255,255,.14) !important; border-radius: 999px; }
         .sports [role="progressbar"] > * { background: #FFD520 !important; }
-        .sports [role="tablist"] { display: inline-flex; gap: 4px; background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.12) !important; border-radius: 999px !important; padding: 6px !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 34px rgba(0,0,0,.28); }
+        .sports [role="tablist"] { gap: 4px; background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.12) !important; border-radius: 999px !important; padding: 6px !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 34px rgba(0,0,0,.28); }
         .sports [role="tab"] { border-radius: 999px !important; color: rgba(234,242,255,.6) !important; font-weight: 600; transition: color .2s, background .2s; }
         .sports [role="tab"]:hover { color: #fff !important; }
         .sports [role="tab"][data-state="active"] { background: #fff !important; color: #0A2547 !important; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
@@ -142,11 +142,14 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         }
 
       `}</style>
-      <header className="bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "#0E55AF" } : undefined}>
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-7">
-          <img src={LOGO_URL} alt="Nine3 Designs" className="h-24 md:h-36" />
+      <header className="relative overflow-hidden bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "linear-gradient(180deg,#0E55AF,#0A4384)" } : undefined}>
+        <div className="hero-bg-lines" aria-hidden="true" />
+        <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2.5 px-6 pb-7 pt-9 text-center md:pt-11">
+          <img src={LOGO_URL} alt="Nine3 Designs" className="h-14 w-auto md:h-16" style={{ filter: "drop-shadow(0 8px 22px rgba(0,0,0,.4))" }} />
+          <div className="h-px w-28 rounded-full bg-gradient-to-r from-transparent via-white/45 to-transparent" />
+          <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">Client Portal</p>
         </div>
-        {name && <div className="mx-auto max-w-5xl px-6 pb-8"><p className="text-sm opacity-70">Welcome,</p><h1 className="font-heading text-3xl font-bold tracking-tight" style={tone === "sports" ? { fontFamily: "'League Spartan', sans-serif" } : undefined}>{name}</h1></div>}
+        {name && <div className="relative mx-auto max-w-5xl px-6 pb-8 text-center"><p className="text-sm opacity-70">Welcome back,</p>{name && <div className="mx-auto max-w-5xl px-6 pb-8"><p className="text-sm opacity-70">Welcome,</p><h1 className="font-heading text-3xl font-bold tracking-tight" style={tone === "sports" ? { fontFamily: "'League Spartan', sans-serif" } : undefined}>{name}</h1></div>}</div>}
       </header>
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
       <footer className="pb-8 text-center text-xs text-muted-foreground/80">
@@ -396,6 +399,54 @@ function DocCard({ d, token }: { d: Any; token: string | null }) {
   );
 }
 
+/* ---------------- Player photo albums ---------------- */
+function playerName(title: string): string {
+  const m = title.match(/^(.*?)\s+sponsored by/i);
+  return (m ? m[1] : title).trim() || "Unnamed player";
+}
+
+function PhotoAlbums({ photos, empty }: { photos: Any[]; empty: string }) {
+  const [openP, setOpenP] = useState<string | null>(null);
+  if (photos.length === 0) return <Empty>{empty}</Empty>;
+  const groups: { name: string; items: Any[] }[] = [];
+  for (const ph of photos) {
+    const name = playerName(ph.title ?? "");
+    let g = groups.find((x) => x.name === name);
+    if (!g) { g = { name, items: [] }; groups.push(g); }
+    g.items.push(ph);
+  }
+  if (openP) {
+    const g = groups.find((x) => x.name === openP);
+    if (g) return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" onClick={() => setOpenP(null)} className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur transition hover:bg-white/20"><ArrowLeft className="h-3.5 w-3.5" /> All players</button>
+          <div>
+            <h3 className="font-heading text-xl font-bold text-white">{g.name}</h3>
+            <p className="text-xs text-muted-foreground">{g.items.length} {g.items.length === 1 ? "photo" : "photos"}</p>
+          </div>
+        </div>
+        <FileGrid files={g.items} empty="No photos in this album yet." />
+      </div>
+    );
+  }
+  return (
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+      {groups.map((g) => (
+        <button key={g.name} type="button" onClick={() => setOpenP(g.name)} className="fx-card group overflow-hidden rounded-xl border text-left">
+          <div className="aspect-square overflow-hidden bg-black/20">
+            {g.items[0]?.url ? <img src={g.items[0].url} alt={g.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <div className="flex h-full w-full items-center justify-center text-muted-foreground"><ImageIcon className="h-6 w-6" /></div>}
+          </div>
+          <div className="p-3">
+            <p className="truncate text-sm font-semibold text-white">{g.name}</p>
+            <p className="text-xs text-muted-foreground">{g.items.length} {g.items.length === 1 ? "photo" : "photos"}</p>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ---------------- Sports weekly portal ---------------- */
 function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const today = new Date().toISOString().slice(0, 10);
@@ -512,7 +563,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
           <Section title="Player photos">
             <div className="space-y-4">
               <UploadBox token={token} kind="photo" label="Upload player photos" />
-              <FileGrid files={photos} empty="No player photos uploaded yet." />
+              <PhotoAlbums photos={photos} empty="No player photos uploaded yet." />
             </div>
           </Section>
           {proofs.length > 0 && (
@@ -783,12 +834,12 @@ function ReqModal({ token, onClose }: { token: string | null; onClose: () => voi
 /* ---------------- Portal experience upgrades ---------------- */
 function PortalLoader() {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center py-24 text-center">
-      <div className="load-glass flex flex-col items-center rounded-2xl border p-10 md:p-12">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-40 md:h-52" />
-        <p className="mt-8 text-sm font-medium">Preparing your portal…</p>
-        <div className="load-bar mt-5"><span /></div>
+    <div className="flex min-h-[70vh] flex-col items-center justify-center py-24 text-center">
+      <div className="load-orb relative flex items-center justify-center rounded-full">
+        <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-14 w-auto md:h-16" />
       </div>
+      <p className="eyebrow mt-8">Preparing your portal</p>
+      <div className="load-bar mt-4"><span /></div>
     </div>
   );
 }

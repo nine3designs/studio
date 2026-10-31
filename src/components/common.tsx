@@ -9,11 +9,12 @@ import { cn } from "@/lib/utils";
 
 export function PageHeader({ eyebrow, title, subtitle, action }: { eyebrow?: string; title: string; subtitle?: string; action?: ReactNode }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b pb-6">
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
         {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
-        <h1 className="text-3xl font-light text-primary-deep">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
+        <h1 className="font-heading text-3xl font-bold tracking-tight text-primary-deep md:text-4xl">{title}</h1>
+        <div className="dash-underline mt-2" />
+        {subtitle && <p className="mt-2.5 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -117,9 +118,9 @@ export function FormDialog({ trigger, title, open, onOpenChange, children }: { t
 
 export function StatCard({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
-    <div className="rounded-md border bg-card p-5">
+    <div className="zd-card relative rounded-2xl border border-white/60 bg-white/70 p-5 shadow-[0_10px_30px_-18px_rgba(23,75,80,.35)] backdrop-blur">
       <p className="eyebrow">{label}</p>
-      <p className="mt-3 text-3xl font-light text-primary-deep">{value}</p>
+      <p className="mt-3 font-heading text-3xl font-bold tabular-nums tracking-tight text-primary-deep">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
