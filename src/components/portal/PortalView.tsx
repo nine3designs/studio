@@ -53,6 +53,16 @@ function MobileTabs({ tabs, value, onChange }: { tabs: { v: string; l: string }[
 }
 
 function Shell({ children, name, tone }: { children: ReactNode; name?: string; tone?: "sports" }) {
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const m = document.querySelector("main");
+      const h = document.querySelector(".sports-hero");
+      const kit = document.querySelector("section.rounded-md");
+      const g = (el: any) => el ? Math.round(el.getBoundingClientRect().width) : -1;
+      document.title = "DBG iw=" + window.innerWidth + " bw=" + document.body.scrollWidth + " main=" + g(m) + " hero=" + g(h) + " sec=" + g(kit);
+    }, 1200);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div className={`min-h-screen bg-background${tone === "sports" ? " sports" : ""}`}>
       <style>{`
