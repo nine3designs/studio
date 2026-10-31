@@ -26,7 +26,8 @@ function InvoiceEditor() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [v, setV] = useState<any>(null);
   useEffect(() => { if (inv) setV(inv); }, [inv]);
-  useEffect(() => { if (v?.number) document.title = `Nine3 invoice ${v.number}`; }, [v?.number]);
+  useEffect(() => { if (v?.number) document.title = `Nine3 ${v.status?.startsWith("quote") ? "quote" : "invoice"} ${v.number}`; }, [v?.number]);
+  const isQuote = !!v?.status?.startsWith("quote");
   if (!v) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   const items: LineItem[] = v.items ?? [];
@@ -38,7 +39,7 @@ function InvoiceEditor() {
   async function persist(extra: Record<string, unknown> = {}) {
     const { id, client_id, number, issue_date, due_date, status, items, notes, tax_rate, paid_at } = { ...v, ...extra };
     await save.mutateAsync({ id, client_id, number, issue_date, due_date, status, items, notes, tax_rate, paid_at });
-    if (extra["status"] && client_id) await logActivity(client_id, `Invoice ${number} marked ${extra["status"]}`);
+    if (extra["status"] && client_id) await logActivity(client_id, `${isQuote ? "Quote" : "Invoice"} ${number} marked ${extra["status"].replace("quote_", "")}`);
   }
 
   return (
@@ -47,8 +48,18 @@ function InvoiceEditor() {
         <Link to="/invoices" className="text-xs text-muted-foreground hover:text-primary-soft">← All invoices</Link>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => window.print()}><Download className="h-4 w-4" /> Download PDF</Button>
-          {v.status === "draft" && <Button variant="outline" onClick={() => persist({ status: "sent" })}>Mark sent</Button>}
-          {v.status !== "paid" && <Button variant="outline" onClick={() => persist({ status: "paid", paid_at: new Date().toISOString().slice(0, 10) })}>Mark paid</Button>}
+          {isQuote ? (
+            <>
+              {v.status === "quote_draft" && <Button variant="outline" onClick={() => persist({ status: "quote_sent" })}>Mark sent</Button>}
+              {v.status !== "quote_accepted" && v.status !== "quote_declined" && <Button variant="outline" onClick={() => persist({ status: "quote_accepted" })}>Mark accepted</Button>}
+              {v.status !== "quote_declined" && v.status !== "quote_accepted" && <Button variant="outline" onClick={() => persist({ status: "quote_declined" })}>Mark declined</Button>}
+            </>
+          ) : (
+            <>
+              {v.status === "draft" && <Button variant="outline" onClick={() => persist({ status: "sent" })}>Mark sent</Button>}
+              {v.status !== "paid" && <Button variant="outline" onClick={() => persist({ status: "paid", paid_at: new Date().toISOString().slice(0, 10) })}>Mark paid</Button>}
+            </>
+          )}
           <Button onClick={() => persist()}>Save</Button>
           <Button variant="ghost" onClick={async () => { if (confirm("Delete invoice?")) { await remove.mutateAsync(v.id); navigate({ to: "/invoices" }); } }}><Trash2 className="h-4 w-4" /></Button>
         </div>
@@ -57,12 +68,12 @@ function InvoiceEditor() {
         <section className="no-print space-y-4 rounded-md border bg-card p-5">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5"><Label>Number</Label><Input value={v.number} onChange={(e) => setV({ ...v, number: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Status</Label><select className={sel} value={v.status} onChange={(e) => setV({ ...v, status: e.target.value })}>{["draft", "sent", "paid", "void"].map((s) => <option key={s}>{s}</option>)}</select></div>
+            <div className="space-y-1.5"><Label>Status</Label><select className={sel} value={v.status} onChange={(e) => setV({ ...v, status: e.target.value })}>{(isQuote ? ["quote_draft", "quote_sent", "quote_accepted", "quote_declined"] : ["draft", "sent", "paid", "void"]).map((s) => <option key={s}>{s.replace("quote_", "quote ")}</option>)}</select></div>
           </div>
           <div className="space-y-1.5"><Label>Client</Label><select className={sel} value={v.client_id ?? ""} onChange={(e) => setV({ ...v, client_id: e.target.value || null })}><option value="">·</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5"><Label>Issued</Label><Input type="date" value={v.issue_date ?? ""} onChange={(e) => setV({ ...v, issue_date: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Due</Label><Input type="date" value={v.due_date ?? ""} onChange={(e) => setV({ ...v, due_date: e.target.value || null })} /></div>
+            <div className="space-y-1.5"><Label>{isQuote ? "Valid until" : "Due"}</Label><Input type="date" value={v.due_date ?? ""} onChange={(e) => setV({ ...v, due_date: e.target.value || null })} /></div>
             <div className="space-y-1.5"><Label>VAT %</Label><Input type="number" value={v.tax_rate} onChange={(e) => setV({ ...v, tax_rate: Number(e.target.value) })} /></div>
           </div>
           <div className="space-y-2">

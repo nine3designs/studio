@@ -13,12 +13,14 @@ export type InvoiceDoc = {
 
 export function InvoiceDocument({ inv }: { inv: InvoiceDoc }) {
   const t = invoiceTotals(inv.items, inv.tax_rate);
+  const isQuote = inv.status.startsWith("quote");
+  const docLabel = isQuote ? "Quote" : "Invoice";
   return (
     <div className="print-area rounded-md border bg-card p-10 shadow-sm">
       <div className="flex items-start justify-between gap-6 rounded-sm bg-primary-deep p-6">
         <img src={LOGO_URL} alt="Nine3 Designs" className="h-12" />
         <div className="text-right text-primary-foreground">
-          <p className="text-xs uppercase tracking-[0.3em] text-gold">Invoice</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-gold">{docLabel}</p>
           <p className="text-2xl font-light">{inv.number}</p>
         </div>
       </div>
@@ -31,8 +33,8 @@ export function InvoiceDocument({ inv }: { inv: InvoiceDoc }) {
         </div>
         <div className="text-right">
           <p><span className="text-muted-foreground">Issued:</span> {fmtDate(inv.issue_date)}</p>
-          <p><span className="text-muted-foreground">Due:</span> {fmtDate(inv.due_date)}</p>
-          <p className="capitalize"><span className="text-muted-foreground">Status:</span> {inv.status}</p>
+          <p><span className="text-muted-foreground">{isQuote ? "Valid until:" : "Due:"}</span> {fmtDate(inv.due_date)}</p>
+          <p className="capitalize"><span className="text-muted-foreground">Status:</span> {inv.status.replace("quote_", "quote ")}</p>
         </div>
       </div>
       <table className="mt-8 w-full text-sm">
@@ -58,7 +60,7 @@ export function InvoiceDocument({ inv }: { inv: InvoiceDoc }) {
         <div className="flex justify-between border-t pt-2 text-lg font-semibold text-primary-deep"><span>Total</span><span>{money(t.total)}</span></div>
       </div>
       {inv.notes && <p className="mt-8 whitespace-pre-wrap text-sm text-muted-foreground">{inv.notes}</p>}
-      <p className="mt-10 font-script text-lg font-semibold uppercase tracking-widest text-primary">Thank you</p>
+      <p className="mt-10 font-script text-lg font-semibold uppercase tracking-widest text-primary">{isQuote ? "Approval" : "Thank you"}</p>
       <p className="text-xs text-muted-foreground">Nine3 Designs · nine3designs.co.uk</p>
     </div>
   );

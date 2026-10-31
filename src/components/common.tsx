@@ -34,6 +34,10 @@ const tone: Record<string, string> = {
   pending: "bg-gold/20 text-primary-deep",
   in_progress: "bg-gold/20 text-primary-deep",
   active: "bg-primary/10 text-primary",
+  quote_draft: "bg-muted text-muted-foreground",
+  quote_sent: "bg-primary/10 text-primary",
+  quote_accepted: "bg-success/15 text-success",
+  quote_declined: "bg-destructive/15 text-destructive",
 };
 
 export function StatusBadge({ status }: { status: string }) {

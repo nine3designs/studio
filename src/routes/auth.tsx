@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { LOGO_URL, LOGO_URL_PETROL } from "@/lib/format";
+import { LOGO_MARK_URL, LOGO_MARK_WHITE_URL } from "@/lib/format";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -90,13 +90,13 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen md:grid-cols-2">
       <div className="hidden flex-col justify-between bg-primary-deep p-12 md:flex">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="h-32 self-start md:h-48" />
+        <img src={LOGO_MARK_WHITE_URL} alt="Nine3 Designs" className="h-40 self-start md:h-52" />
         <p className="font-script text-3xl font-semibold tracking-wide uppercase text-primary-soft">Studio</p>
       </div>
       <div className="flex items-center justify-center p-8">
         <form onSubmit={submit} className="w-full max-w-md space-y-7">
           <div>
-            <img src={LOGO_URL_PETROL} alt="Nine3 Designs" className="h-16 md:hidden" />
+            <img src={LOGO_MARK_URL} alt="Nine3 Designs" className="h-24 w-24 md:hidden" />
             <p className="eyebrow mt-6 md:mt-0">Nine3 Designs</p>
             <h1 className="mt-3 text-4xl font-light leading-snug text-primary-deep">{title}</h1>
             {recovery && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Pick something you'll remember · minimum 6 characters.</p>}
@@ -116,10 +116,7 @@ function AuthPage() {
           )}
           <Button type="submit" disabled={busy} className="w-full py-3">{recovery ? "Save new password" : mode === "in" ? "Sign in" : mode === "up" ? "Create account" : "Email me a reset link"}</Button>
           {!recovery && (
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <button type="button" className="hover:text-primary" onClick={() => setMode(mode === "in" ? "up" : "in")}>
-                {mode === "in" ? "First time? Create the studio account" : "Already have an account? Sign in"}
-              </button>
+            <div className="flex items-center justify-end gap-6 text-sm text-muted-foreground">
               {mode === "in" && <button type="button" className="hover:text-primary" onClick={() => setMode("reset")}>Forgot password?</button>}
               {mode !== "in" && <button type="button" className="hover:text-primary" onClick={() => setMode("in")}>Back</button>}
             </div>
