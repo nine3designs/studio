@@ -30,23 +30,19 @@ export function PortalView({ token }: { token: string | null }) {
   );
 }
 
-function MobileTabs({ tabs }: { tabs: { v: string; l: string }[] }) {
+function MobileTabs({ tabs, value, onChange }: { tabs: { v: string; l: string }[]; value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
-  const pick = (v: string) => {
-    const el = document.querySelector<HTMLButtonElement>(`[role="tab"][value="${v}"], [data-value="${v}"]`);
-    if (el) el.click();
-    setOpen(false);
-  };
+  const current = tabs.find((t) => t.v === value);
   return (
     <div className="mb-6 md:hidden">
-      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center justify-between rounded-md border bg-card px-4 py-3 text-sm font-medium">
-        <span>Menu</span>
-        {open ? <ChevronDown className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex w-full items-center justify-between rounded-md border bg-card px-4 py-3 text-sm font-medium">
+        <span className="flex items-center gap-2"><Menu className="h-4 w-4" />{current ? current.l : "Menu"}</span>
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div className="mt-2 space-y-1 rounded-md border bg-card p-2">
           {tabs.map((t) => (
-            <button key={t.v} type="button" onClick={() => pick(t.v)} className="block w-full rounded px-3 py-2 text-left text-sm hover:bg-accent">
+            <button key={t.v} type="button" onClick={() => { onChange(t.v); setOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); }} className={`block w-full rounded px-3 py-2 text-left text-sm hover:bg-accent ${t.v === value ? "bg-accent font-semibold" : ""}`}>
               {t.l}
             </button>
           ))}
@@ -180,9 +176,10 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 function StandardPortal({ p, token }: { p: Any; token: string | null }) {
   const proofs = p.deliverables.filter((d: Any) => d.kind === "proof");
   const pending = proofs.filter((d: Any) => d.status === "pending").length;
+  const [tab, setTab] = useState("overview");
   return (
-    <Tabs defaultValue="overview">
-      <MobileTabs tabs={[
+    <Tabs value={tab} onValueChange={setTab}>
+      <MobileTabs value={tab} onChange={setTab} tabs={[
         { v: "overview", l: "Overview" },
         { v: "proofs", l: `Proofs${pending ? ` (${pending})` : ""}` },
         { v: "files", l: "Files" },
@@ -520,14 +517,13 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
       )}
 
       <Tabs value={tab} onValueChange={(v: string) => setTab(v)}>
-        <MobileTabs tabs={tabs} />
+        <MobileTabs tabs={tabs} value={tab} onChange={setTab} />
         <TabsList className="mb-8 hidden flex-wrap md:flex">
           {tabs.map((t) => <TabsTrigger key={t.v} value={t.v}>{t.l}</TabsTrigger>)}
         </TabsList>
 
         <TabsContent value="fixtures" className="mt-0 space-y-8">
           <div className="grid gap-6 md:grid-cols-2">
-            <Kit label="Kit colours" k={p.client.home_kit} away={p.client.away_kit} />
             <div className="rounded-md border bg-card p-5">
               <p className="eyebrow mb-3">Quick actions</p>
               <div className="flex flex-col gap-2">
@@ -536,6 +532,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
                 {!next && <p className="text-xs text-muted-foreground">No upcoming fixture yet · team sheets attach to a fixture.</p>}
               </div>
             </div>
+            <Kit label="Kit colours" k={p.client.home_kit} away={p.client.away_kit} />
           </div>
           <Section title="Upcoming fixtures">
             {upcoming.length === 0 ? <Empty>No upcoming fixtures.</Empty> : (

@@ -61,7 +61,7 @@ function Dashboard() {
     <div className="dash-wrap relative overflow-hidden rounded-3xl p-4 sm:p-6 lg:p-8">
       <div className="dash-glow" aria-hidden="true" />
       <header className="relative mb-6">
-        <p className="eyebrow">Welcome back· {now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</p>
+        <p className="eyebrow">Welcome back · {now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</p>
         <h1 className="font-heading mt-1 text-3xl font-bold tracking-tight text-primary-deep md:text-5xl">Your Studio Dashboard</h1>
         <div className="dash-underline mt-2" />
       </header>
@@ -69,17 +69,19 @@ function Dashboard() {
       {next && nextClient && (
         <section className="dash-hero relative mb-6 overflow-hidden rounded-2xl p-5 text-white md:p-7">
           <div className="hero-bg-lines" aria-hidden="true" />
-          <div className="relative flex flex-wrap items-center gap-5">
-            {kits.badge ? <img src={kits.badge} alt="badge" className="h-14 w-14 rounded-xl bg-white/10 object-contain p-1 ring-1 ring-white/25" /> : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur"><CalendarDays className="h-7 w-7 text-[#FFD520]" /></div>
+          <div className="relative grid gap-4 md:flex md:flex-wrap md:items-center md:gap-5">
+            <div className="flex items-center gap-4">
+            {kits.badge ? <img src={kits.badge} alt="badge" className="h-14 w-14 shrink-0 rounded-xl bg-white/10 object-contain p-1 ring-1 ring-white/25" /> : (
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur"><CalendarDays className="h-7 w-7 text-[#FFD520]" /></div>
             )}
-            <div className="min-w-52 flex-1">
-              <p className="eyebrow" style={{ color: "#FFD520" }}>Next match· {nextClient.name}</p>
+            <div className="min-w-0 flex-1">
+              <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {nextClient.name}</p>
               <h2 className="font-heading text-2xl font-bold tracking-tight md:text-3xl">{next.venue === "home" ? "vs" : "away at"} {next.opponent}</h2>
               <div className="dash-underline mt-2" style={{ background: "linear-gradient(90deg,#FFD520,rgba(255,255,255,.8))" }} />
-              <p className="mt-2 text-sm text-white/75">{fmtDate(next.match_date)}· {next.venue === "home" ? "Home" : "Away"}{next.competition ? ` · ${next.competition}` : ""}</p>
+              <p className="mt-2 text-sm text-white/75">{fmtDate(next.match_date)} · {next.venue === "home" ? "Home" : "Away"}{next.competition ? ` · ${next.competition}` : ""}</p>
             </div>
-            <div className="flex flex-col gap-2">
+            </div>
+            <div className="flex flex-col gap-2 md:ml-auto">
               <Link to="/tasks" className="rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-center text-sm font-semibold backdrop-blur transition-colors hover:bg-white/20">Graphics to-do ({tasks.filter((t) => t.status !== "done" && t.client_id === next.client_id).length})</Link>
               {nextClient.portal_token && <a href={portalLink(nextClient.portal_token)} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-[#FFD520] px-5 py-2.5 text-sm font-semibold text-[#0A2547] shadow-lg transition-transform hover:scale-[1.03]">Open portal <ExternalLink className="h-4 w-4" /></a>}
             </div>
@@ -99,7 +101,7 @@ function Dashboard() {
           <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="font-heading text-lg font-bold tracking-tight text-primary-deep">Your Task Timeline</h2>
-              <p className="text-xs text-muted-foreground">{doneTasks.length}/{tasks.length} done· see your progress take shape</p>
+              <p className="text-xs text-muted-foreground">{doneTasks.length}/{tasks.length} done · see your progress take shape</p>
             </div>
             <Link to="/tasks" className="flex items-center gap-1 rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-deep">All tasks</Link>
           </div>

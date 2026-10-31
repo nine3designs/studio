@@ -13,14 +13,14 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
-import { LOGO_URL } from "@/lib/format";
+import { LOGO_URL, LOGO_URL_PETROL } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="mx-auto mb-6 h-16" />
+        <img src={LOGO_URL_PETROL} alt="Nine3 Designs" className="mx-auto mb-6 h-16" />
         <h1 className="text-7xl font-light text-primary">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Looks like you've taken a wrong turn</h2>
         <p className="mt-2 text-sm text-muted-foreground">That page doesn't exist · but your projects, proofs and invoices are all safe and sound.</p>

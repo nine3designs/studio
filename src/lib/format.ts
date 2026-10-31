@@ -1,6 +1,7 @@
 export type LineItem = { description: string; quantity: number; rate: number };
 
 export const LOGO_URL = "https://nine3designs.co.uk/assets/images/branding/logo-porcelain.svg";
+export const LOGO_URL_PETROL = "https://nine3designs.co.uk/assets/images/branding/logo-petrol.svg";
 
 export function money(n: number | string | null | undefined) {
   const v = Number(n ?? 0);

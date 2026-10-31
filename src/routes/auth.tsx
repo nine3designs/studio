@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { LOGO_URL } from "@/lib/format";
+import { LOGO_URL, LOGO_URL_PETROL } from "@/lib/format";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -96,7 +96,7 @@ function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <form onSubmit={submit} className="w-full max-w-md space-y-7">
           <div>
-            <img src={LOGO_URL} alt="Nine3 Designs" className="h-16 md:hidden" />
+            <img src={LOGO_URL_PETROL} alt="Nine3 Designs" className="h-16 md:hidden" />
             <p className="eyebrow mt-6 md:mt-0">Nine3 Designs</p>
             <h1 className="mt-3 text-4xl font-light leading-snug text-primary-deep">{title}</h1>
             {recovery && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Pick something you'll remember · minimum 6 characters.</p>}
