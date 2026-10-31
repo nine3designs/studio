@@ -54,14 +54,18 @@ function MobileTabs({ tabs, value, onChange }: { tabs: { v: string; l: string }[
 
 function Shell({ children, name, tone }: { children: ReactNode; name?: string; tone?: "sports" }) {
   useEffect(() => {
-    const t = setTimeout(() => {
+    const tick = () => {
       const m = document.querySelector("main");
       const h = document.querySelector(".sports-hero");
       const kit = document.querySelector("section.rounded-md");
       const g = (el: any) => el ? Math.round(el.getBoundingClientRect().width) : -1;
-      document.title = "DBG iw=" + window.innerWidth + " bw=" + document.body.scrollWidth + " main=" + g(m) + " hero=" + g(h) + " sec=" + g(kit);
-    }, 1200);
-    return () => clearTimeout(t);
+      let d = document.getElementById("dbgw");
+      if (!d) { d = document.createElement("div"); d.id = "dbgw"; d.setAttribute("style", "position:fixed;bottom:6px;left:6px;z-index:99999;background:#fff;color:#000;font:11px monospace;padding:4px 6px;border-radius:6px;"); document.body.appendChild(d); }
+      d.textContent = "iw=" + window.innerWidth + " bw=" + document.body.scrollWidth + " main=" + g(m) + " hero=" + g(h) + " sec=" + g(kit);
+    };
+    const t1 = setTimeout(tick, 1500);
+    const t2 = setTimeout(tick, 4000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
   return (
     <div className={`min-h-screen bg-background${tone === "sports" ? " sports" : ""}`}>
