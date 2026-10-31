@@ -69,7 +69,7 @@ function Dashboard() {
       </header>
 
       {next && nextClient && (
-        <section className="dash-hero relative mb-6 overflow-hidden rounded-2xl p-5 text-white md:p-7">
+        <section className="dash-hero relative mb-8 overflow-hidden rounded-2xl p-5 text-white md:p-7" style={{ background: kits.primary ? `linear-gradient(120deg, ${kits.primary} 0%, color-mix(in srgb, ${kits.primary} 45%, #061826) 100%)` : undefined }}>
           <div className="hero-bg-lines" aria-hidden="true" />
           <div className="relative grid grid-cols-1 gap-4 md:flex md:flex-wrap md:items-center md:gap-5">
             <div className="flex items-center gap-4">
@@ -91,14 +91,14 @@ function Dashboard() {
         </section>
       )}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Tile label="Active projects" value={active.length} icon={FolderKanban} tone="bg-primary/10 text-primary" />
         <Tile label="Paid this month" value={money(paidThisMonth)} icon={PiggyBank} tone="bg-success/10 text-success" />
         <Tile label="Outstanding" value={money(outstanding)} icon={Receipt} tone="bg-gold/15 text-gold-foreground" />
         <Tile label="Active clients" value={clients.filter((c) => c.status === "active").length} icon={Users} tone="bg-primary-soft/30 text-primary" />
       </div>
 
-      <section className="zd-card relative rounded-2xl border border-white/10 bg-primary-deep p-5 text-white shadow-[0_16px_44px_-18px_rgba(23,75,80,.6)]">
+      <section className="zd-card relative mt-8 rounded-2xl border border-white/10 bg-primary-deep p-5 text-white shadow-[0_16px_44px_-18px_rgba(23,75,80,.6)]">
           <h2 className="font-heading text-lg font-bold tracking-tight text-white">Quick Links</h2>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
             {nav.map(({ to, label, icon: Icon }) => (

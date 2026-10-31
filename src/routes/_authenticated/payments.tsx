@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarClock, Check, PiggyBank, Receipt, TrendingUp, TriangleAlert } from "lucide-react";
+import { CalendarClock, Check, FileText, PiggyBank, Receipt, TrendingUp, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { Empty } from "@/components/common";
 import { useRows, useSave } from "@/lib/db";
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/payments")({
   component: Payments,
 });
 
-type MonthRow = { key: string; label: string; short?: string; amount: number; paid: boolean; paidAt?: string; overdue: boolean };
+type MonthRow = { key: string; label: string; short?: string; amount: number; paid: boolean; paidAt?: string; invoiced: boolean; invoicedAt?: string; overdue: boolean };
 
 function buildMonths(c: Any, today: Date): MonthRow[] {
   const cfg = c.portal_prefs?.monthly_config ?? null;
@@ -33,7 +33,9 @@ function buildMonths(c: Any, today: Date): MonthRow[] {
       amount: Number(e.amount ?? amount),
       paid: !!e.paid,
       paidAt: e.paid_at,
-      overdue: !e.paid && d.getTime() < Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1),
+      invoiced: !!e.invoiced,
+      invoicedAt: e.invoiced_at,
+      overdue: !e.paid && !!e.invoiced && d.getTime() < Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1),
     });
   }
   return rows;
@@ -110,13 +112,29 @@ function Payments() {
     toast.success(entry.paid ? `${month.label} marked as paid · ${money(month.amount)}` : `${month.label} marked as unpaid`);
   }
 
+  async function toggleInvoiced(c: Any, month: MonthRow) {
+    const prefs = { ...(c.portal_prefs ?? {}) };
+    const monthly = { ...(prefs.monthly ?? {}) };
+    const entry = { ...(monthly[month.key] ?? {}) };
+    if (entry.invoiced) {
+      delete entry.invoiced;
+      delete entry.invoiced_at;
+    } else {
+      entry.invoiced = true;
+      entry.invoiced_at = new Date().toISOString().slice(0, 10);
+    }
+    monthly[month.key] = entry;
+    await save.mutateAsync({ id: c.id, portal_prefs: { ...prefs, monthly } });
+    toast.success(entry.invoiced ? `Invoice marked sent · ${month.label}` : `${month.label} marked not invoiced`);
+  }
+
   const today = new Date();
   let totalEarned = 0, outstandingTotal = 0, overdueTotal = 0, scheduledTotal = 0;
   const monthMap = new Map<string, { short: string; collected: number; scheduled: number; order: string }>();
   for (const c of sports) {
     for (const m of buildMonths(c, today)) {
       scheduledTotal += m.amount;
-      if (m.paid) totalEarned += m.amount; else outstandingTotal += m.amount;
+      if (m.paid) totalEarned += m.amount; else if (m.invoiced) outstandingTotal += m.amount;
       if (m.overdue) overdueTotal += m.amount;
       const e = monthMap.get(m.key) ?? { short: m.short ?? m.key, collected: 0, scheduled: 0, order: m.key };
       e.scheduled += m.amount;
@@ -227,7 +245,18 @@ function Payments() {
                         </div>
                         <p className="mt-2 font-heading text-2xl font-bold tabular-nums text-foreground">{money(m.amount)}</p>
                         <p className="mt-0.5 text-sm text-muted-foreground">{m.label}</p>
-                        {m.paidAt && <p className="mt-2 text-[11px] text-muted-foreground">Cleared {m.paidAt}</p>}
+                        <div className="mt-2 flex items-center justify-between gap-2">
+                          {m.paidAt ? <p className="text-[11px] text-muted-foreground">Cleared {m.paidAt}</p> : <span />}
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(ev) => { ev.stopPropagation(); toggleInvoiced(c, m); }}
+                            onKeyDown={(ev) => { if (ev.key === "Enter") { ev.stopPropagation(); toggleInvoiced(c, m); } }}
+                            className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${m.invoiced ? "border-success/40 bg-success/10 text-success" : "border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary"}`}
+                          >
+                            <FileText className="h-3 w-3" /> {m.invoiced ? "Invoice sent" : "Mark invoiced"}
+                          </span>
+                        </div>
                       </button>
                     ))}
                   </div>

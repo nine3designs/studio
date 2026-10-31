@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Empty, StatusBadge } from "@/components/common";
 import { supabase } from "@/integrations/supabase/client";
 import { getPortal, portalAction } from "@/lib/portal.functions";
-import { effectiveStatus, fmtDate, invoiceTotals, LOGO_MARK_URL, LOGO_URL, money, type LineItem } from "@/lib/format";
+import { effectiveStatus, fmtDate, invoiceTotals, LOGO_MARK_URL, LOGO_MARK_WHITE_URL, LOGO_URL, money, type LineItem } from "@/lib/format";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -53,20 +53,6 @@ function MobileTabs({ tabs, value, onChange }: { tabs: { v: string; l: string }[
 }
 
 function Shell({ children, name, tone }: { children: ReactNode; name?: string; tone?: "sports" }) {
-  useEffect(() => {
-    const tick = () => {
-      const m = document.querySelector("main");
-      const h = document.querySelector(".sports-hero");
-      const kit = document.querySelector("section.rounded-md");
-      const g = (el: any) => el ? Math.round(el.getBoundingClientRect().width) : -1;
-      let d = document.getElementById("dbgw");
-      if (!d) { d = document.createElement("div"); d.id = "dbgw"; d.setAttribute("style", "position:fixed;bottom:6px;left:6px;z-index:99999;background:#fff;color:#000;font:11px monospace;padding:4px 6px;border-radius:6px;"); document.body.appendChild(d); }
-      d.textContent = "iw=" + window.innerWidth + " bw=" + document.body.scrollWidth + " main=" + g(m) + " hero=" + g(h) + " sec=" + g(kit);
-    };
-    const t1 = setTimeout(tick, 1500);
-    const t2 = setTimeout(tick, 4000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
   return (
     <div className={`min-h-screen bg-background${tone === "sports" ? " sports" : ""}`}>
       <style>{`
@@ -155,11 +141,11 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
       <header className="relative overflow-hidden bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "linear-gradient(180deg,#0E55AF,#0A4384)" } : undefined}>
         <div className="hero-bg-lines" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2.5 px-6 pb-7 pt-9 text-center md:pt-11">
-          <img src={LOGO_MARK_URL} alt="Nine3 Designs" className="h-20 w-auto md:h-28" style={{ filter: "drop-shadow(0 8px 22px rgba(0,0,0,.4))" }} />
+          <img src={LOGO_MARK_WHITE_URL} alt="Nine3 Designs" className="h-24 w-auto md:h-32" style={{ filter: "drop-shadow(0 10px 26px rgba(0,0,0,.45))" }} />
           <div className="h-px w-28 rounded-full bg-gradient-to-r from-transparent via-white/45 to-transparent" />
           <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">Client Portal</p>
         </div>
-        {name && <div className="relative mx-auto max-w-5xl px-6 pb-8 text-center"><p className="text-sm opacity-70">Welcome back,</p><h1 className="font-heading text-3xl font-bold tracking-tight" style={tone === "sports" ? { fontFamily: "'League Spartan', sans-serif", color: "#FFD520" } : undefined}>{name}</h1></div>}
+        {name && <div className="relative mx-auto max-w-5xl px-6 pb-8 text-center"><p className="text-sm opacity-70">Welcome back,</p><h1 className="font-heading text-4xl font-bold tracking-tight md:text-5xl" style={tone === "sports" ? { fontFamily: "'League Spartan', sans-serif", color: "#FFD520" } : undefined}>{name}</h1></div>}
       </header>
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
       <footer className="pb-8 text-center text-xs text-muted-foreground/80">
@@ -541,8 +527,8 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
             <div className="rounded-md border bg-card p-5">
               <p className="eyebrow mb-3">Quick actions</p>
               <div className="flex flex-col gap-2">
-                <Button variant="outline" onClick={() => setReqOpen(true)} className="justify-start"><Plus className="h-4 w-4" /> New graphic request</Button>
-                <Button variant="outline" onClick={() => next && setOpenFx(next)} disabled={!next} className="justify-start"><Plus className="h-4 w-4" /> Add team sheet</Button>
+                <Button variant="outline" onClick={() => setReqOpen(true)} className="h-14 justify-start rounded-xl text-base font-semibold"><Plus className="h-5 w-5" /> New graphic request</Button>
+                <Button variant="outline" onClick={() => next && setOpenFx(next)} disabled={!next} className="h-14 justify-start rounded-xl text-base font-semibold"><Plus className="h-5 w-5" /> Add team sheet</Button>
                 {!next && <p className="text-xs text-muted-foreground">No upcoming fixture yet · team sheets attach to a fixture.</p>}
               </div>
             </div>

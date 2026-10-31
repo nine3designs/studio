@@ -191,7 +191,7 @@ body {
 .bg-card:hover {
   box-shadow: 0 2px 4px rgba(23,75,80,.05), 0 14px 36px rgba(23,75,80,.09), 0 6px 18px rgba(183,194,196,.12);
 }
-.dash-hero { position: relative; overflow: hidden; background-image: linear-gradient(135deg, #0F3A3E, #174B50 55%, #1E5F66) !important; }
+.dash-hero { position: relative; overflow: hidden; background-image: linear-gradient(135deg, #0F3A3E, #174B50 55%, #1E5F66); }
 .dash-hero::after {
   content: ""; position: absolute; right: -70px; top: -70px; width: 280px; height: 280px; border-radius: 9999px;
   background: radial-gradient(circle, rgba(183,194,196,.28), transparent 70%); pointer-events: none;
