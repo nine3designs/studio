@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowUpRight, CalendarDays, Check, ChevronRight, ClipboardList, ExternalLink, FolderKanban, PartyPopper, PiggyBank, Receipt, Users } from "lucide-react";
 import { StatusBadge } from "@/components/common";
 import { nav as allNav } from "@/components/StudioShell";
@@ -28,6 +28,29 @@ function Dashboard() {
   const invoices = useRows("invoices").data ?? [];
   const tasks = useRows("tasks", { select: "*, projects(name)", order: "due_date", asc: true }).data ?? [];
   const activity = useRows("activity_log", { select: "*, clients(name)" }).data ?? [];
+  useEffect(() => {
+    const run = () => {
+      const iw = window.innerWidth;
+      const offenders: string[] = [];
+      document.querySelectorAll("*").forEach((el) => {
+        const r = (el as HTMLElement).getBoundingClientRect();
+        if (r.right > iw + 1 && r.width > 40) {
+          const c = (el as HTMLElement).className;
+          offenders.push(el.tagName + "." + String(typeof c === "string" ? c.split(" ").slice(0, 3).join(".") : "") + "@" + Math.round(r.left) + "+" + Math.round(r.width));
+        }
+      });
+      const dw = document.querySelector(".dash-wrap") as HTMLElement | null;
+      const grid = document.querySelector(".dash-wrap .grid") as HTMLElement | null;
+      const txt = "DBG iw=" + iw + " docSW=" + document.documentElement.scrollWidth + " dw=" + (dw ? dw.offsetWidth : -1) + " grid=" + (grid ? grid.offsetWidth : -1) + " | " + offenders.slice(0, 6).join(" ; ");
+      let d = document.getElementById("dbgd") as HTMLElement | null;
+      if (!d) { d = document.createElement("div"); d.id = "dbgd"; document.body.appendChild(d); }
+      d.setAttribute("style", "position:fixed;top:0;left:0;z-index:99999;background:#fff;color:#000;font:10px monospace;padding:4px;max-width:100vw;white-space:pre-wrap;");
+      d.textContent = txt;
+    };
+    const t1 = setTimeout(run, 1800);
+    const t2 = setTimeout(run, 4500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
   const clients = useRows("clients").data ?? [];
   const fixtures = useRows("sports_fixtures", { order: "match_date", asc: true }).data ?? [];
   const taskSave = useSave("tasks");
