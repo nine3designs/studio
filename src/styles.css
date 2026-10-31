@@ -267,7 +267,7 @@ body {
 
 /* ---- Mobile overflow guards ---- */
 html, body { overflow-x: clip; }
-.dash-wrap, .dash-wrap > * { min-width: 0; }
+.dash-wrap, .dash-wrap * { min-width: 0; }
 @media (max-width: 640px) {
   .dash-wrap { padding: 1rem !important; border-radius: 1.25rem !important; }
 }

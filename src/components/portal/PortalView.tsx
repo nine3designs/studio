@@ -155,11 +155,11 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
       <header className="relative overflow-hidden bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "linear-gradient(180deg,#0E55AF,#0A4384)" } : undefined}>
         <div className="hero-bg-lines" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2.5 px-6 pb-7 pt-9 text-center md:pt-11">
-          <img src={LOGO_URL} alt="Nine3 Designs" className="h-14 w-auto md:h-16" style={{ filter: "drop-shadow(0 8px 22px rgba(0,0,0,.4))" }} />
+          <img src={LOGO_URL} alt="Nine3 Designs" className="h-20 w-auto md:h-28" style={{ filter: "drop-shadow(0 8px 22px rgba(0,0,0,.4))" }} />
           <div className="h-px w-28 rounded-full bg-gradient-to-r from-transparent via-white/45 to-transparent" />
           <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">Client Portal</p>
         </div>
-        {name && <div className="relative mx-auto max-w-5xl px-6 pb-8 text-center"><p className="text-sm opacity-70">Welcome back,</p><h1 className="font-heading text-3xl font-bold tracking-tight" style={tone === "sports" ? { fontFamily: "'League Spartan', sans-serif" } : undefined}>{name}</h1></div>}
+        {name && <div className="relative mx-auto max-w-5xl px-6 pb-8 text-center"><p className="text-sm opacity-70">Welcome back,</p><h1 className="font-heading text-3xl font-bold tracking-tight" style={tone === "sports" ? { fontFamily: "'League Spartan', sans-serif", color: "#FFD520" } : undefined}>{name}</h1></div>}
       </header>
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
       <footer className="pb-8 text-center text-xs text-muted-foreground/80">
@@ -519,7 +519,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
             {(["primary", "secondary"] as const).filter((c) => nextKit?.[c]).map((c) => (
               <span key={c} className="h-6 w-6 rounded-sm border-2 border-white/70 shadow-sm" style={{ background: nextKit[c] }} title={nextKit[c]} />
             ))}
-            <span className="text-xs opacity-80">{next.venue === "home" ? "Home colours" : "Away colours"}</span>
+            <span className="text-xs uppercase tracking-widest opacity-80">{next.venue === "home" ? "Home colours" : "Away colours"}</span>
           </div>
           {nextGfx.length > 0 && (
             <div className="relative mt-4 max-w-xs">
@@ -845,9 +845,9 @@ function ReqModal({ token, onClose }: { token: string | null; onClose: () => voi
 /* ---------------- Portal experience upgrades ---------------- */
 function PortalLoader() {
   return (
-    <div className="flex min-h-[70vh] flex-col items-center justify-center py-24 text-center">
+    <div className="flex min-h-[62vh] flex-col items-center justify-center text-center">
       <div className="load-orb relative flex items-center justify-center rounded-full">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-14 w-auto md:h-16" />
+        <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-24 w-auto md:h-32" style={{ filter: "drop-shadow(0 6px 18px rgba(23,75,80,.35))" }} />
       </div>
       <p className="eyebrow mt-8">Preparing your portal</p>
       <div className="load-bar mt-4"><span /></div>

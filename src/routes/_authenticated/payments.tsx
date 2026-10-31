@@ -154,7 +154,7 @@ function Payments() {
             <Kpi label="Monthly run-rate" value={money(runRate)} icon={TrendingUp} tone="bg-primary/10 text-primary" />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <section className="zd-card rounded-2xl border border-white/60 bg-white/70 p-5 shadow-[0_10px_30px_-18px_rgba(23,75,80,.35)] backdrop-blur lg:col-span-2">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
@@ -202,7 +202,7 @@ function Payments() {
                   <p className="mb-4 flex items-center gap-2 rounded-xl bg-destructive/10 px-3.5 py-2.5 text-xs font-semibold text-destructive"><TriangleAlert className="h-3.5 w-3.5" /> {money(overdue)} overdue · chase before the next drop</p>
                 )}
                 {months.length === 0 ? <Empty>Set a start month for this package (ask Juno to seed it).</Empty> : (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {months.map((m) => (
                       <button
                         type="button"

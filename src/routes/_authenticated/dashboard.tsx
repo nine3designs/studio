@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArrowUpRight, CalendarDays, Check, ChevronRight, ClipboardList, ExternalLink, FolderKanban, PartyPopper, PiggyBank, Receipt, Users } from "lucide-react";
 import { StatusBadge } from "@/components/common";
 import { nav as allNav } from "@/components/StudioShell";
@@ -28,29 +28,7 @@ function Dashboard() {
   const invoices = useRows("invoices").data ?? [];
   const tasks = useRows("tasks", { select: "*, projects(name)", order: "due_date", asc: true }).data ?? [];
   const activity = useRows("activity_log", { select: "*, clients(name)" }).data ?? [];
-  useEffect(() => {
-    const run = () => {
-      const iw = window.innerWidth;
-      const offenders: string[] = [];
-      document.querySelectorAll("*").forEach((el) => {
-        const r = (el as HTMLElement).getBoundingClientRect();
-        if (r.right > iw + 1 && r.width > 40) {
-          const c = (el as HTMLElement).className;
-          offenders.push(el.tagName + "." + String(typeof c === "string" ? c.split(" ").slice(0, 3).join(".") : "") + "@" + Math.round(r.left) + "+" + Math.round(r.width));
-        }
-      });
-      const dw = document.querySelector(".dash-wrap") as HTMLElement | null;
-      const grid = document.querySelector(".dash-wrap .grid") as HTMLElement | null;
-      const txt = "DBG iw=" + iw + " docSW=" + document.documentElement.scrollWidth + " dw=" + (dw ? dw.offsetWidth : -1) + " grid=" + (grid ? grid.offsetWidth : -1) + " | " + offenders.slice(0, 6).join(" ; ");
-      let d = document.getElementById("dbgd") as HTMLElement | null;
-      if (!d) { d = document.createElement("div"); d.id = "dbgd"; document.body.appendChild(d); }
-      d.setAttribute("style", "position:fixed;top:0;left:0;z-index:99999;background:#fff;color:#000;font:10px monospace;padding:4px;max-width:100vw;white-space:pre-wrap;");
-      d.textContent = txt;
-    };
-    const t1 = setTimeout(run, 1800);
-    const t2 = setTimeout(run, 4500);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+
   const clients = useRows("clients").data ?? [];
   const fixtures = useRows("sports_fixtures", { order: "match_date", asc: true }).data ?? [];
   const taskSave = useSave("tasks");
@@ -92,7 +70,7 @@ function Dashboard() {
       {next && nextClient && (
         <section className="dash-hero relative mb-6 overflow-hidden rounded-2xl p-5 text-white md:p-7">
           <div className="hero-bg-lines" aria-hidden="true" />
-          <div className="relative grid gap-4 md:flex md:flex-wrap md:items-center md:gap-5">
+          <div className="relative grid grid-cols-1 gap-4 md:flex md:flex-wrap md:items-center md:gap-5">
             <div className="flex items-center gap-4">
             {kits.badge ? <img src={kits.badge} alt="badge" className="h-14 w-14 shrink-0 rounded-xl bg-white/10 object-contain p-1 ring-1 ring-white/25" /> : (
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur"><CalendarDays className="h-7 w-7 text-[#FFD520]" /></div>
@@ -119,7 +97,41 @@ function Dashboard() {
         <Tile label="Active clients" value={clients.filter((c) => c.status === "active").length} icon={Users} tone="bg-primary-soft/30 text-primary" />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <section className="zd-card relative rounded-2xl border border-white/10 bg-primary-deep p-5 text-white shadow-[0_16px_44px_-18px_rgba(23,75,80,.6)]">
+          <h2 className="font-heading text-lg font-bold tracking-tight text-white">Quick Links</h2>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {nav.map(({ to, label, icon: Icon }) => (
+              <Link key={to} to={to as never} className="group flex flex-col items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-2 py-3.5 text-center transition-all hover:-translate-y-0.5 hover:border-[#FFD520]/60 hover:bg-white/15 hover:shadow-md">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[#FFD520] transition group-hover:bg-[#FFD520] group-hover:text-[#0A2547]"><Icon className="h-4 w-4" /></span>
+                <span className="text-xs font-semibold text-white">{label}</span>
+              </Link>
+            ))}
+          </div>
+          {sportsClients.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">Sports portals</p>
+              {sportsClients.map((c) => (
+                <div key={c.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/15 bg-white/10 p-2.5">
+                  <span className="min-w-0 truncate text-sm font-medium text-white">{c.name}</span>
+                  <div className="flex shrink-0 gap-1.5">
+                    {c.portal_token && <a href={portalLink(c.portal_token)} target="_blank" rel="noreferrer" className="rounded-full bg-[#FFD520] px-3 py-1.5 text-xs font-semibold text-[#0A2547] transition hover:bg-white">Portal</a>}
+                    <Link to="/tasks" className="rounded-full border border-white/25 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10">Tasks</Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {recent.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-white/60">Recently viewed</p>
+              <div className="flex flex-wrap gap-1.5">
+                {recent.map((c) => <Link key={c!.id} to="/clients/$id" params={{ id: c!.id }} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20">{c!.name}</Link>)}
+              </div>
+            </div>
+          )}
+        </section>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <section className="zd-card lg:col-span-2 rounded-2xl border border-white/60 bg-white/70 p-5 shadow-[0_10px_30px_-18px_rgba(23,75,80,.35)] backdrop-blur">
           <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -151,41 +163,9 @@ function Dashboard() {
           )}
         </section>
 
-        <section className="zd-card rounded-2xl border border-white/60 bg-white/70 p-5 shadow-[0_10px_30px_-18px_rgba(23,75,80,.35)] backdrop-blur">
-          <h2 className="font-heading text-lg font-bold tracking-tight text-primary-deep">Quick links</h2>
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {nav.map(({ to, label, icon: Icon }) => (
-              <Link key={to} to={to as never} className="group flex flex-col items-center gap-1.5 rounded-xl border border-border/60 bg-background/70 px-2 py-3.5 text-center transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-white"><Icon className="h-4 w-4" /></span>
-                <span className="text-xs font-semibold text-primary-deep">{label}</span>
-              </Link>
-            ))}
-          </div>
-          {sportsClients.length > 0 && (
-            <div className="mt-4 space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Sports portals</p>
-              {sportsClients.map((c) => (
-                <div key={c.id} className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-background/70 p-2.5">
-                  <span className="min-w-0 truncate text-sm font-medium">{c.name}</span>
-                  <div className="flex shrink-0 gap-1.5">
-                    {c.portal_token && <a href={portalLink(c.portal_token)} target="_blank" rel="noreferrer" className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-deep">Portal</a>}
-                    <Link to="/tasks" className="rounded-full border px-3 py-1.5 text-xs font-semibold text-primary-deep transition hover:bg-accent">Tasks</Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {recent.length > 0 && (
-            <div className="mt-4">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Recently viewed</p>
-              <div className="flex flex-wrap gap-1.5">
-                {recent.map((c) => <Link key={c!.id} to="/clients/$id" params={{ id: c!.id }} className="rounded-full border bg-background/60 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent">{c!.name}</Link>)}
-              </div>
-            </div>
-          )}
-        </section>
+        
 
-        <section className="zd-card lg:col-span-2 rounded-2xl border border-white/60 bg-white/70 p-5 shadow-[0_10px_30px_-18px_rgba(23,75,80,.35)] backdrop-blur">
+        <section className="zd-card lg:col-span-3 rounded-2xl border border-white/60 bg-white/70 p-5 shadow-[0_10px_30px_-18px_rgba(23,75,80,.35)] backdrop-blur">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="font-heading text-lg font-bold tracking-tight text-primary-deep">Active projects</h2>
             <Link to="/projects" className="rounded-full border px-3 py-1.5 text-xs font-semibold text-primary-deep transition hover:bg-accent">View all</Link>
