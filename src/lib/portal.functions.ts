@@ -85,7 +85,7 @@ type Action =
   | { type: "taskAdd"; title: string }
   | { type: "taskDone"; id: string; done: boolean }
   | { type: "taskDelete"; id: string }
-  | { type: "fixtureResult"; id: string; score: string } |
+  | { type: "fixtureResult"; id: string; score: string }
   | { type: "clientNote"; text: string }
   | { type: "deleteFile"; id: string };
 
