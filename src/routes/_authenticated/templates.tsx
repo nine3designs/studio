@@ -14,20 +14,18 @@ export const Route = createFileRoute("/_authenticated/templates")({
   component: Templates,
 });
 
+// Proposal, contract and reference documents live under Proposals & Contracts.
 export const DOC_KINDS = [
-  { value: "proposal", label: "Proposal" },
-  { value: "contract", label: "Contract" },
   { value: "email", label: "Email" },
   { value: "brief", label: "Brief / questionnaire" },
   { value: "project", label: "Project template" },
-  { value: "reference", label: "Reference" },
 ];
 
 type Draft = { id?: string; kind: string; name: string; description: string; body: string; items: string };
 
 function Templates() {
   const all = useRows("templates", { order: "name", asc: true }).data ?? [];
-  const rows = all.filter((t) => t.kind !== "onboarding");
+  const rows = all.filter((t) => !["onboarding", "proposal", "contract", "reference"].includes(t.kind));
   const save = useSave("templates", "Template saved");
   const remove = useRemove("templates");
   const [editing, setEditing] = useState<Draft | null>(null);
@@ -36,7 +34,7 @@ function Templates() {
 
   return (
     <div>
-      <PageHeader eyebrow="Library" title="Templates" subtitle="Reusable wording, briefs and project blueprints. Onboarding checklists live under Onboarding." action={<Button onClick={() => setEditing({ kind: "proposal", name: "", description: "", body: "", items: "" })}><Plus className="h-4 w-4" /> New template</Button>} />
+      <PageHeader eyebrow="Library" title="Templates" subtitle="Email wording, briefs and project blueprints. Branded proposals and contracts live under Proposals & Contracts, and onboarding checklists under Onboarding." action={<Button onClick={() => setEditing({ kind: "email", name: "", description: "", body: "", items: "" })}><Plus className="h-4 w-4" /> New template</Button>} />
       <div className="mb-4 flex flex-wrap gap-2">
         {[{ value: "all", label: "All" }, ...DOC_KINDS].map((k) => <Button key={k.value} size="sm" variant={kind === k.value ? "default" : "outline"} onClick={() => setKind(k.value)}>{k.label}</Button>)}
       </div>

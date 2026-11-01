@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Empty, FormDialog, PageHeader, StatusBadge } from "@/components/common";
 import { logActivity, useRemove, useRows, useSave } from "@/lib/db";
 import { fmtDate, invoiceTotals, money, type LineItem } from "@/lib/format";
+import { stripEmoji } from "@/components/DocumentSheet";
 
 export const Route = createFileRoute("/_authenticated/proposals")({
   head: () => ({ meta: [{ title: "Proposals & Contracts · Nine3 Studio" }] }),
@@ -16,6 +17,49 @@ export const Route = createFileRoute("/_authenticated/proposals")({
 
 type Draft = { id?: string; kind: string; title: string; client_id: string | null; body: string; items: LineItem[]; status: string };
 const sel = "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm";
+
+const KIND_LABEL: Record<string, string> = { proposal: "Proposal", contract: "Contract", reference: "Reference" };
+
+function cleanPreview(body: string) {
+  return stripEmoji(body.replace(/[#*]/g, "").replace(/-{3,}/g, " ")).replace(/\s+/g, " ");
+}
+
+function TemplateLibrary() {
+  const templates = (useRows("templates", { order: "name", asc: true }).data ?? []).filter(
+    (t) => t.kind === "proposal" || t.kind === "contract" || t.kind === "reference"
+  );
+  const groups = [
+    { key: "proposal", title: "Proposals", blurb: "Personalise with a client name, date and package price, then download as a branded PDF." },
+    { key: "contract", title: "Contracts", blurb: "Sign-off ready agreements with fill-in fields and signature lines." },
+    { key: "reference", title: "Reference", blurb: "Documents to keep to hand, such as the package overview." },
+  ];
+  return (
+    <div className="space-y-8">
+      {groups.map((g) => {
+        const items = templates.filter((t) => t.kind === g.key);
+        if (items.length === 0) return null;
+        return (
+          <section key={g.key}>
+            <p className="eyebrow">{g.title}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{g.blurb}</p>
+            <div className="mt-3 grid gap-4 md:grid-cols-2">
+              {items.map((t) => (
+                <div key={t.id} className="flex flex-col rounded-md border bg-card p-5">
+                  <h3 className="font-heading text-lg font-semibold text-primary-deep">{stripEmoji(t.name)}</h3>
+                  {t.description && <p className="mt-1 text-sm text-muted-foreground">{t.description}</p>}
+                  <p className="mt-3 line-clamp-2 flex-1 whitespace-pre-wrap text-xs text-muted-foreground">{cleanPreview(t.body ?? "")}</p>
+                  <div className="mt-4">
+                    <Button size="sm" asChild><Link to="/documents/$id" params={{ id: t.id }}>Open & download</Link></Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
 
 function Proposals() {
   const rows = useRows("proposals", { select: "*, clients(name)" }).data ?? [];
@@ -26,6 +70,7 @@ function Proposals() {
   const remove = useRemove("proposals");
   const [d, setD] = useState<Draft | null>(null);
   const [kind, setKind] = useState("all");
+  const [tab, setTab] = useState<"docs" | "library">("docs");
   const shown = rows.filter((r) => kind === "all" || r.kind === kind);
 
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.name ?? "";
@@ -39,7 +84,13 @@ function Proposals() {
 
   return (
     <div>
-      <PageHeader eyebrow="Sales" title="Proposals & Contracts" subtitle="Sent documents appear in the client's portal, where they can accept and sign." action={<Button onClick={() => setD({ kind: "proposal", title: "", client_id: null, body: "", items: [], status: "draft" })}><Plus className="h-4 w-4" /> New document</Button>} />
+      <PageHeader eyebrow="Sales" title="Proposals & Contracts" subtitle="Send documents to clients or start from a branded template. Sent documents appear in the client's portal, where they can accept and sign." action={<Button onClick={() => setD({ kind: "proposal", title: "", client_id: null, body: "", items: [], status: "draft" })}><Plus className="h-4 w-4" /> New document</Button>} />
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Button size="sm" variant={tab === "docs" ? "default" : "outline"} onClick={() => setTab("docs")}>Documents</Button>
+        <Button size="sm" variant={tab === "library" ? "default" : "outline"} onClick={() => setTab("library")}>Template library</Button>
+      </div>
+      {tab === "library" ? <TemplateLibrary /> : (
+      <>
       <div className="mb-4 flex gap-2">
         {["all", "proposal", "contract"].map((k) => <Button key={k} size="sm" variant={kind === k ? "default" : "outline"} className="capitalize" onClick={() => setKind(k)}>{k === "all" ? "All" : k + "s"}</Button>)}
       </div>
@@ -104,6 +155,8 @@ function Proposals() {
             ))}</tbody>
           </table>
         </div>
+      )}
+      </>
       )}
     </div>
   );
