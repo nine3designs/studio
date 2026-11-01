@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
+import { Download, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,9 +41,23 @@ function Expenses() {
     { name: "project_id", label: "Project (optional)", type: "select" as const, options: projects.map((p) => ({ value: p.id, label: p.name })) },
   ];
 
+  function exportCsv() {
+    const esc = (s: unknown) => '"' + String(s ?? "").replace(/"/g, '""') + '"';
+    const head = "Date,Description,Supplier,Category,Project,Amount";
+    const lines = shown.map((r) => [r.spent_on, r.description, r.vendor, r.category, r.projects?.name ?? "", Number(r.amount).toFixed(2)].map(esc).join(","));
+    const csv = "\uFEFF" + [head, ...lines].join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "nine3-expenses-" + (month || "all") + ".csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Exported " + shown.length + " expenses");
+  }
+
   return (
     <div>
-      <PageHeader eyebrow="Money" title="Expenses" action={<Button onClick={() => { setReceipt(null); setEditing({ category: "General", spent_on: new Date().toISOString().slice(0, 10) }); }}><Plus className="h-4 w-4" /> Add expense</Button>} />
+      <PageHeader eyebrow="Money" title="Expenses" action={<div className="flex gap-2"><Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4" /> Export CSV</Button><Button onClick={() => { setReceipt(null); setEditing({ category: "General", spent_on: new Date().toISOString().slice(0, 10) }); }}><Plus className="h-4 w-4" /> Add expense</Button></div>} />
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <StatCard label="This view" value={money(total)} hint={`${shown.length} expenses`} />
         <StatCard label={`Total ${year}`} value={money(yearTotal)} />

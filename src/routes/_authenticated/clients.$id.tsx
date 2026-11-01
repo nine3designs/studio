@@ -98,7 +98,7 @@ function PortalSettings({ client }: { client: any }) {
         ))}
         <div className="space-y-1.5"><Label>Status</Label>
           <select className={sel + " w-full"} value={v.status} onChange={(e) => set("status", e.target.value)}>
-            <option value="active">Active</option><option value="lead">Lead</option><option value="archived">Archived</option>
+            <option value="active">Active</option><option value="on_hold">On hold</option><option value="archived">Archived</option>
           </select>
         </div>
         <div className="space-y-1.5"><Label>Notes</Label><Textarea value={v.notes ?? ""} onChange={(e) => set("notes", e.target.value)} /></div>

@@ -1,10 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowUpRight, CalendarDays, Check, ChevronRight, ClipboardList, ExternalLink, FolderKanban, PartyPopper, PiggyBank, Receipt, Users } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Check, ChevronRight, Download, ExternalLink, FolderKanban, PiggyBank, Plus, Receipt, Trash2, Upload, Users, X } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/common";
 import { nav as allNav } from "@/components/StudioShell";
-import { useRows, useSave } from "@/lib/db";
+import { openFile, uploadFile, useRows, useSave } from "@/lib/db";
 import { effectiveStatus, fmtDate, invoiceTotals, money, portalLink } from "@/lib/format";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Any = any;
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard · Nine3 Studio" }] }),
@@ -28,7 +34,6 @@ function Dashboard() {
   const invoices = useRows("invoices").data ?? [];
   const tasks = useRows("tasks", { select: "*, projects(name)", order: "due_date", asc: true }).data ?? [];
   const activity = useRows("activity_log", { select: "*, clients(name)" }).data ?? [];
-
 
   const clients = useRows("clients").data ?? [];
   const fixtures = useRows("sports_fixtures", { order: "match_date", asc: true }).data ?? [];
@@ -58,6 +63,9 @@ function Dashboard() {
   const recent = recentIds.map((rid) => clients.find((c) => c.id === rid)).filter(Boolean);
   const wanted = ["Clients", "Projects", "Tasks", "Invoices", "Monthly payments", "Templates"];
   const nav = allNav.filter((n) => wanted.includes(n.label));
+  const [fxOpen, setFxOpen] = useState<Any | null>(null);
+  const fxSave = useSave("sports_fixtures");
+  const showProjects = active.length > 0 ? active : [...projects].sort((a, b) => String(b.due_date ?? "").localeCompare(String(a.due_date ?? ""))).slice(0, 4);
 
   return (
     <div className="dash-wrap relative overflow-hidden rounded-3xl p-4 sm:p-6 lg:p-8">
@@ -69,7 +77,7 @@ function Dashboard() {
       </header>
 
       {next && nextClient && (
-        <section className="dash-hero relative mb-8 overflow-hidden rounded-2xl p-5 text-white md:p-7" style={{ background: kits.primary ? `linear-gradient(120deg, ${kits.primary} 0%, color-mix(in srgb, ${kits.primary} 45%, #061826) 100%)` : undefined }}>
+        <button type="button" onClick={() => setFxOpen(next)} className="dash-hero portal-fade group relative mb-8 block w-full overflow-hidden rounded-2xl p-5 text-left text-white md:p-7">
           <div className="hero-bg-lines" aria-hidden="true" />
           <div className="relative grid grid-cols-1 gap-4 md:flex md:flex-wrap md:items-center md:gap-5">
             <div className="flex items-center gap-4">
@@ -83,12 +91,18 @@ function Dashboard() {
               <p className="mt-2 text-sm text-white/75">{fmtDate(next.match_date)} · {next.venue === "home" ? "Home" : "Away"}{next.competition ? ` · ${next.competition}` : ""}</p>
             </div>
             </div>
-            <div className="flex flex-col gap-2 md:ml-auto">
+            <div className="flex flex-col gap-2 md:ml-auto" onClick={(e) => e.stopPropagation()}>
               <Link to="/tasks" className="rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-center text-sm font-semibold backdrop-blur transition-colors hover:bg-white/20">Graphics to-do ({tasks.filter((t) => t.status !== "done" && t.client_id === next.client_id).length})</Link>
               {nextClient.portal_token && <a href={portalLink(nextClient.portal_token)} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-[#F5F1E8] px-5 py-2.5 text-sm font-semibold text-[#174B50] shadow-lg transition-transform hover:scale-[1.03]">Open portal <ExternalLink className="h-4 w-4" /></a>}
             </div>
           </div>
-        </section>
+          <div className="relative mt-4 flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
+            <div className="flex items-center gap-2">
+              {(["primary", "secondary"] as const).filter((c) => kits[c]).map((c) => <span key={c} className="h-5 w-5 rounded-sm border-2 border-white/60" style={{ background: kits[c] }} title={kits[c]} />)}
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-widest text-white/70 group-hover:text-white">Open matchday · graphics checklist <ChevronRight className="inline h-3.5 w-3.5" /></span>
+          </div>
+        </button>
       )}
 
       <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -164,30 +178,14 @@ function Dashboard() {
           )}
         </section>
 
-        
-
-        <section className="zd-card lg:col-span-3 rounded-2xl border border-white/60 bg-white/70 p-5 shadow-[0_10px_30px_-18px_rgba(23,75,80,.35)] backdrop-blur">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="font-heading text-lg font-bold tracking-tight text-primary-deep">Active projects</h2>
-            <Link to="/projects" className="rounded-full border px-3 py-1.5 text-xs font-semibold text-primary-deep transition hover:bg-accent">View all</Link>
-          </div>
-          {active.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No active projects yet.</p> : (
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {active.slice(0, 6).map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/70 px-3 py-2.5">
-                  <div className="min-w-0"><p className="truncate text-sm font-medium">{p.name}</p><p className="text-[11px] text-muted-foreground">{p.clients?.name ?? "No client"}</p></div>
-                  <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">{fmtDate(p.due_date)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
         <section className="zd-card rounded-2xl border border-white/60 bg-white/70 p-5 shadow-[0_10px_30px_-18px_rgba(23,75,80,.35)] backdrop-blur">
-          <h2 className="font-heading text-lg font-bold tracking-tight text-primary-deep">Recent activity</h2>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="font-heading text-lg font-bold tracking-tight text-primary-deep">Recent activity</h2>
+            <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Latest</span>
+          </div>
           {activity.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No activity yet.</p> : (
-            <ul className="mt-3 space-y-2.5">
-              {activity.slice(0, 5).map((a) => (
+            <ul className="space-y-2.5">
+              {activity.slice(0, 6).map((a) => (
                 <li key={a.id} className="flex items-start gap-2.5 text-sm">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
                   <span className="min-w-0"><span className="font-medium">{a.clients?.name ?? "Studio"}</span> <span className="text-muted-foreground">{a.message}</span></span>
@@ -196,21 +194,129 @@ function Dashboard() {
             </ul>
           )}
         </section>
+
+        <section className="zd-card lg:col-span-3 rounded-2xl border border-white/60 bg-white/70 p-5 shadow-[0_10px_30px_-18px_rgba(23,75,80,.35)] backdrop-blur">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="font-heading text-lg font-bold tracking-tight text-primary-deep">{active.length > 0 ? "Active projects" : "Projects"}</h2>
+            <Link to="/projects" className="rounded-full border px-3 py-1.5 text-xs font-semibold text-primary-deep transition hover:bg-accent">View all</Link>
+          </div>
+          {showProjects.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No projects yet.</p> : (
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {showProjects.map((p) => (
+                <li key={p.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/70 px-3 py-2.5">
+                  <div className="min-w-0"><p className="truncate text-sm font-medium">{p.name}</p><p className="text-[11px] text-muted-foreground">{p.clients?.name ?? "No client"}</p></div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {active.length === 0 && <StatusBadge status={p.status} />}
+                    <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">{fmtDate(p.due_date)}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
+
+      {fxOpen && <MatchdayDialog f={fxOpen} client={nextClient ?? clients.find((c) => c.id === fxOpen.client_id)} save={fxSave} onClose={() => setFxOpen(null)} />}
 
       <style>{`
         .dash-wrap { background: linear-gradient(155deg,#F8F4EB 0%,#F1EDE4 30%,#DCE9E5 68%,#EFE3CE 100%); }
         .dash-glow { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 85% 5%, rgba(183,194,196,.22), transparent 45%), radial-gradient(circle at 5% 90%, rgba(23,75,80,.08), transparent 40%); }
         .dash-glow + * { position: relative; }
-        .dash-hero { background: linear-gradient(120deg,#174B50 0%,#0F3A40 55%,#0A2B31 100%); box-shadow: 0 24px 60px -24px rgba(23,75,80,.55); }
+        .dash-hero { background: linear-gradient(120deg,#174B50 0%,#0F3A40 55%,#0A2B31 100%); box-shadow: 0 24px 60px -24px rgba(23,75,80,.55); transition: transform .3s ease, box-shadow .3s ease; }
+        .dash-hero:hover { transform: translateY(-2px); box-shadow: 0 30px 70px -24px rgba(23,75,80,.65); }
         .hero-bg-lines { position: absolute; inset: 0; pointer-events: none; background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.06) 0 1px, transparent 1px 30px), radial-gradient(circle at 88% 15%, rgba(183,194,196,.14), transparent 50%); }
         .dash-underline { height: 4px; width: 110px; border-radius: 999px; background: linear-gradient(90deg,#B7C2C4,rgba(23,75,80,.25)); animation: dashshine 2.8s ease-in-out infinite; }
         @keyframes dashshine { 0%,100% { width: 110px; opacity: .95; } 50% { width: 190px; opacity: .55; } }
         .zd-progress { height: 8px; border-radius: 999px; background: rgba(23,75,80,.1); overflow: hidden; }
         .zd-progress span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg,#174B50,#B7C2C4); transition: width .6s ease; }
-        @media (prefers-reduced-motion: reduce) { .dash-underline { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { .dash-underline { animation: none; } .dash-hero { transition: none; } }
         @media (max-width: 640px) { .dash-wrap { padding: 1rem !important; border-radius: 1.25rem !important; } .dash-hero { padding: 1.1rem !important; } .dash-hero h2 { font-size: 1.3rem !important; } }
       `}</style>
+    </div>
+  );
+}
+
+function MatchdayDialog({ f, client, save, onClose }: { f: Any; client: Any; save: Any; onClose: () => void }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [gfx, setGfx] = useState<Any[]>(((f.graphics ?? []) as Any[]).map((x) => ({ ...x })));
+  const [addName, setAddName] = useState("");
+  const [busyIdx, setBusyIdx] = useState<number | null>(null);
+  const d = new Date(`${f.match_date}T00:00:00`);
+
+  async function persist(list: Any[], msg: string) {
+    try {
+      await save.mutateAsync({ id: f.id, graphics: list });
+      setGfx(list);
+      toast.success(msg);
+    } catch (e) { toast.error((e as Error).message); }
+  }
+
+  function toggle(i: number) {
+    const list = gfx.map((x, j) => j === i ? { ...x, done: !x.done } : x);
+    persist(list, list[i].done ? "Marked ready" : "Marked as to-do");
+  }
+
+  function removeItem(i: number) {
+    if (!confirm("Remove this graphic from the list?")) return;
+    persist(gfx.filter((_, j) => j !== i), "Removed");
+  }
+
+  async function upload(i: number, file: File) {
+    if (!client) return;
+    setBusyIdx(i);
+    try {
+      const path = await uploadFile(client.id, file);
+      const list = gfx.map((x, j) => j === i ? { ...x, done: true, path, fileName: file.name } : x);
+      await persist(list, "Graphic uploaded · ticked off");
+    } catch (e) { toast.error((e as Error).message); }
+    setBusyIdx(null);
+  }
+
+  async function addGraphic(e: React.FormEvent) {
+    e.preventDefault();
+    if (!addName.trim()) return;
+    await persist([...gfx, { name: addName.trim(), done: false }], "Graphic added");
+    setAddName("");
+  }
+
+  const done = gfx.filter((x) => x.done).length;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-sm md:items-center md:p-6" onClick={onClose}>
+      <div className="fx-dialog max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-t-3xl border border-white/70 bg-white p-7 shadow-[0_40px_90px_-20px_rgba(23,75,80,.5)] md:rounded-3xl" onClick={(e: Any) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="eyebrow">Matchday · {fmtDate(f.match_date)}</p>
+            <h3 className="mt-1 font-heading text-2xl font-bold tracking-tight text-primary-deep">{f.venue === "home" ? "vs" : "away at"} {f.opponent}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{f.venue === "home" ? "Home" : "Away"}{f.competition ? ` · ${f.competition}` : ""}{client ? ` · ${client.name}` : ""}</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-muted-foreground transition hover:bg-accent hover:text-primary" aria-label="Close"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="zd-progress mt-4 mb-5"><span style={{ width: `${gfx.length ? (done / gfx.length) * 100 : 0}%` }} /></div>
+        {f.notes && <p className="mb-4 rounded-xl bg-accent/50 p-3 text-sm text-muted-foreground">{f.notes}</p>}
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Graphics · {done}/{gfx.length} done</p>
+        <ul className="space-y-2">
+          {gfx.map((x, i) => (
+            <li key={i} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/70 px-3 py-2.5">
+              <button type="button" aria-label={x.done ? "Mark as to-do" : "Tick off"} onClick={() => toggle(i)} className={`rounded-full border p-1 transition ${x.done ? "border-success bg-success text-white" : "border-muted-foreground/40 text-muted-foreground hover:border-primary hover:text-primary"}`}><Check className="h-3.5 w-3.5" /></button>
+              <span className={`min-w-0 flex-1 truncate text-sm font-medium ${x.done ? "text-muted-foreground" : ""}`}>{x.name}{x.text ? ` · ${x.text}` : ""}</span>
+              {x.path && <button type="button" onClick={() => openFile(x.path)} className="flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success transition hover:bg-success/20"><Download className="h-3 w-3" /> {x.fileName ?? "View"}</button>}
+              <label className="cursor-pointer rounded-full border border-border/60 p-1.5 text-muted-foreground transition hover:border-primary hover:text-primary" title="Upload graphic">
+                {busyIdx === i ? <span className="block h-3.5 w-3.5 animate-pulse rounded-full bg-primary/40" /> : <Upload className="h-3.5 w-3.5" />}
+                <input type="file" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) upload(i, file); e.target.value = ""; }} />
+              </label>
+              <button type="button" aria-label="Remove" onClick={() => removeItem(i)} className="rounded-full p-1 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+            </li>
+          ))}
+        </ul>
+        <form onSubmit={addGraphic} className="mt-4 flex gap-2">
+          <Input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="Add a graphic to this match…" />
+          <Button type="submit" variant="outline"><Plus className="h-4 w-4" /> Add</Button>
+        </form>
+        <div className="mt-6 flex flex-wrap gap-2 border-t border-border/60 pt-5">
+          {client?.portal_token && <a href={portalLink(client.portal_token)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-deep">Open portal <ExternalLink className="h-4 w-4" /></a>}
+          <Button variant="ghost" onClick={onClose} className="text-muted-foreground hover:bg-accent hover:text-primary">Done</Button>
+        </div>
+      </div>
     </div>
   );
 }

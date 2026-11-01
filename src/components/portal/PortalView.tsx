@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Empty, StatusBadge } from "@/components/common";
 import { supabase } from "@/integrations/supabase/client";
 import { getPortal, portalAction } from "@/lib/portal.functions";
-import { effectiveStatus, fmtDate, invoiceTotals, LOGO_MARK_URL, LOGO_MARK_WHITE_URL, LOGO_URL, money, type LineItem } from "@/lib/format";
+import { effectiveStatus, fmtDate, invoiceTotals, LOGO_URL, LOGO_WORDMARK_LIGHT_URL, money, type LineItem } from "@/lib/format";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -141,7 +141,7 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
       <header className="relative overflow-hidden bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "linear-gradient(180deg,#0E55AF,#0A4384)" } : undefined}>
         <div className="hero-bg-lines" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2.5 px-6 pb-7 pt-9 text-center md:pt-11">
-          <img src={LOGO_MARK_WHITE_URL} alt="Nine3 Designs" className="h-24 w-auto md:h-32" style={{ filter: "drop-shadow(0 10px 26px rgba(0,0,0,.45))" }} />
+          <img src={LOGO_WORDMARK_LIGHT_URL} alt="Nine3 Designs" className="h-16 w-auto md:h-20" style={{ filter: "drop-shadow(0 10px 26px rgba(0,0,0,.45))" }} />
           <div className="h-px w-28 rounded-full bg-gradient-to-r from-transparent via-white/45 to-transparent" />
           <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">Client Portal</p>
         </div>
@@ -469,6 +469,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const [tab, setTab] = useState(() => (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab")) || "fixtures");
   const [showAllFx, setShowAllFx] = useState(false);
   const [reqOpen, setReqOpen] = useState(false);
+  const [scoreOpen, setScoreOpen] = useState(false);
   const next = upcoming[0];
   const nextKit = next ? (next.venue === "home" ? p.client.home_kit : p.client.away_kit) : null;
   const nextGfx = next ? ((next.graphics ?? []) as { name: string; done: boolean }[]) : [];
@@ -479,7 +480,6 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
     { v: "proofs", l: "PLAYER PHOTOS" },
     { v: "files", l: "GRAPHICS" },
     { v: "payments", l: "PAYMENTS" },
-    { v: "help", l: "HELP" },
     { v: "todo", l: "TO-DO" },
   ];
 
@@ -527,8 +527,9 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
             <div className="rounded-md border bg-card p-5">
               <p className="eyebrow mb-3">Quick actions</p>
               <div className="flex flex-col gap-2">
-                <Button variant="outline" onClick={() => setReqOpen(true)} className="h-14 justify-start rounded-xl text-base font-semibold"><Plus className="h-5 w-5" /> New graphic request</Button>
-                <Button variant="outline" onClick={() => next && setOpenFx(next)} disabled={!next} className="h-14 justify-start rounded-xl text-base font-semibold"><Plus className="h-5 w-5" /> Add team sheet</Button>
+                <Button variant="outline" onClick={() => setReqOpen(true)} className="h-14 justify-start rounded-xl text-base font-semibold uppercase tracking-wide"><Plus className="h-5 w-5" /> New graphic request</Button>
+                <Button variant="outline" onClick={() => next && setOpenFx(next)} disabled={!next} className="h-14 justify-start rounded-xl text-base font-semibold uppercase tracking-wide"><Plus className="h-5 w-5" /> Add team sheet</Button>
+                <Button variant="outline" onClick={() => setScoreOpen(true)} className="h-14 justify-start rounded-xl text-base font-semibold uppercase tracking-wide"><Plus className="h-5 w-5" /> Submit score</Button>
                 {!next && <p className="text-xs text-muted-foreground">No upcoming fixture yet · team sheets attach to a fixture.</p>}
               </div>
             </div>
@@ -552,6 +553,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
         </TabsContent>
 
         <TabsContent value="todo" className="mt-0 space-y-8">
+          <WhatNew p={p} token={token} />
           <TodoList p={p} token={token} />
           <NotesCard p={p} token={token} />
         </TabsContent>
@@ -599,15 +601,10 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
           </Section>
         </TabsContent>
 
-        <TabsContent value="help" className="mt-0 space-y-8">
-          <WhatNew p={p} token={token} />
-          <Section title="Need help?">
-            <p className="text-sm text-muted-foreground">Questions about fixtures, graphics or payments? Email the studio at <a className="font-medium text-primary underline-offset-2 hover:underline" href="mailto:natalie@nine3designs.co.uk">natalie@nine3designs.co.uk</a> and we’ll get back to you quickly.</p>
-          </Section>
-        </TabsContent>
       </Tabs>
       {openFx && <FxModal f={openFx} token={token} onClose={() => setOpenFx(null)} />}
       {reqOpen && <ReqModal token={token} onClose={() => setReqOpen(false)} />}
+      {scoreOpen && <ScoreModal p={p} token={token} onClose={() => setScoreOpen(false)} />}
     </div>
   );
 }
@@ -681,7 +678,7 @@ function Fixture({ f, client, onOpen }: { f: Any; client?: Any; onOpen?: () => v
               <Download className="h-3 w-3" />{x.name}
             </a>
           ) : (
-            <span key={i} className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${x.done ? "bg-success/15 text-success" : "bg-white/[0.06] text-white/50"}`}>{x.done && <Check className="h-3 w-3" />}{x.name}</span>
+            <span key={i} className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ${x.done ? "bg-success/15 text-success" : "bg-white/[0.06] text-white/50"}`}>{x.done && <Check className="h-3 w-3" />}{x.name}{x.text ? ` · ${x.text}` : ""}</span>
           )
         ))}</div>
         {sheet && (sheet.text || sheet.url) && (
@@ -828,12 +825,51 @@ function ReqModal({ token, onClose }: { token: string | null; onClose: () => voi
   );
 }
 
+function ScoreModal({ p, token, onClose }: { p: Any; token: string | null; onClose: () => void }) {
+  const act = useAct(token);
+  const fixtures: Any[] = [...(p.fixtures ?? [])].reverse();
+  const [fxId, setFxId] = useState<string>(() => (fixtures[fixtures.length - 1]?.id ?? ""));
+  const [score, setScore] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function send() {
+    if (!fxId || !score.trim()) return;
+    setBusy(true);
+    const ok = await act({ type: "fixtureResult", id: fxId, score: score.trim() }, "Score submitted · thank you!");
+    if (ok) onClose();
+    setBusy(false);
+  }
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center" onClick={onClose}>
+      <div className="fx-modal max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-white/10 bg-[#0A1E38]/95 p-6 shadow-2xl backdrop-blur-xl md:rounded-2xl" onClick={(e: Any) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-heading text-2xl font-bold tracking-tight text-white">Submit a score</h3>
+          <button type="button" onClick={onClose} className="rounded-full p-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white" aria-label="Close"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="mt-5 space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-white/60">Which match?</label>
+          <select value={fxId} onChange={(e: Any) => setFxId(e.target.value)} className="fx-sheet-input">
+            {fixtures.map((f: Any) => <option key={f.id} value={f.id}>{new Date(`${f.match_date}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {f.venue === "home" ? "vs" : "away at"} {f.opponent}</option>)}
+          </select>
+        </div>
+        <div className="mt-4 space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-white/60">Final score</label>
+          <Input value={score} onChange={(e: Any) => setScore(e.target.value)} placeholder="e.g. 3-1 (us first)" className="fx-sheet-input" />
+        </div>
+        <div className="mt-6 flex gap-2">
+          <Button onClick={send} disabled={busy || !fxId || !score.trim()}>{busy ? "Sending…" : "Submit score"}</Button>
+          <Button variant="ghost" onClick={onClose} className="text-white/70 hover:bg-white/10 hover:text-white">Cancel</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- Portal experience upgrades ---------------- */
 function PortalLoader() {
   return (
     <div className="flex min-h-[62vh] flex-col items-center justify-center text-center">
       <div className="load-orb relative flex items-center justify-center rounded-full">
-        <img src={LOGO_MARK_URL} alt="Nine3 Designs" className="portal-logo-load h-28 w-auto md:h-40" style={{ filter: "drop-shadow(0 6px 18px rgba(23,75,80,.35))" }} />
+        <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-16 w-auto md:h-20" style={{ filter: "drop-shadow(0 6px 18px rgba(23,75,80,.35))" }} />
       </div>
       <p className="eyebrow mt-8">Preparing your portal</p>
       <div className="load-bar mt-4"><span /></div>

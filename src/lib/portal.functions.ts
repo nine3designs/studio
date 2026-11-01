@@ -85,6 +85,7 @@ type Action =
   | { type: "taskAdd"; title: string }
   | { type: "taskDone"; id: string; done: boolean }
   | { type: "taskDelete"; id: string }
+  | { type: "fixtureResult"; id: string; score: string } |
   | { type: "clientNote"; text: string }
   | { type: "deleteFile"; id: string };
 
@@ -209,6 +210,18 @@ export const portalAction = createServerFn({ method: "POST" })
       const { error } = await admin.from("tasks").delete().eq("id", a.id).eq("client_id", cid);
       if (error) throw new Error("Could not remove the item.");
       await log(`Client removed a to-do item`);
+      return { ok: true };
+    }
+    if (a.type === "fixtureResult") {
+      const score = (a.score || "").trim().slice(0, 40);
+      if (!score) throw new Error("Type the score first.");
+      const { data: fx } = await admin.from("sports_fixtures").select("id, match_date, graphics").eq("id", a.id).eq("client_id", cid).maybeSingle();
+      if (!fx) throw new Error("Fixture not found");
+      const gfx = Array.isArray(fx.graphics) ? (fx.graphics as Any[]).filter((x: Any) => x && x.name !== "Result") : [];
+      gfx.push({ name: "Result", done: true, text: score });
+      const { error } = await admin.from("sports_fixtures").update({ graphics: gfx }).eq("id", a.id).eq("client_id", cid);
+      if (error) throw new Error("Could not save the score.");
+      await log(`Submitted the score (${score}) for the fixture on ${fx.match_date}`);
       return { ok: true };
     }
     if (a.type === "clientNote") {

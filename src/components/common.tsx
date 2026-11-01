@@ -34,6 +34,7 @@ const tone: Record<string, string> = {
   pending: "bg-gold/20 text-primary-deep",
   in_progress: "bg-gold/20 text-primary-deep",
   active: "bg-primary/10 text-primary",
+  on_hold: "bg-gold/15 text-primary-deep",
   quote_draft: "bg-muted text-muted-foreground",
   quote_sent: "bg-primary/10 text-primary",
   quote_accepted: "bg-success/15 text-success",
