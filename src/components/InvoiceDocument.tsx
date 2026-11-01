@@ -1,4 +1,4 @@
-import { fmtDate, invoiceTotals, LOGO_MARK_WHITE_URL, money, type LineItem } from "@/lib/format";
+import { fmtDate, invoiceTotals, LOGO_WORDMARK_LIGHT_URL, money, type LineItem } from "@/lib/format";
 
 export type InvoiceDoc = {
   number: string;
@@ -20,9 +20,8 @@ export function InvoiceDocument({ inv }: { inv: InvoiceDoc }) {
       <div className="relative overflow-hidden rounded-sm p-8 text-center text-white" style={{ background: "linear-gradient(105deg,#101f3a 0%,#1c2a3d 55%,#2b353f 100%)" }}>
         <div className="absolute inset-0 opacity-[0.14]" style={{ backgroundImage: "repeating-linear-gradient(60deg, rgba(255,255,255,0.35) 0 1px, transparent 1px 16px)" }} />
         <div className="relative">
-          <img src={LOGO_MARK_WHITE_URL} alt="Nine3 Designs" className="mx-auto h-20 w-20" />
-          <p className="mt-3 text-sm font-bold uppercase tracking-[0.35em]">Nine3 Designs</p>
-          <p className="mt-1 text-xs uppercase tracking-[0.3em] text-white/70">{docLabel} · {inv.number}</p>
+          <img src={LOGO_WORDMARK_LIGHT_URL} alt="Nine3 Designs" className="mx-auto h-16 w-auto" />
+          <p className="mt-2 text-xs uppercase tracking-[0.3em] text-white/70">{docLabel} · {inv.number}</p>
         </div>
       </div>
       <div className="mt-8 grid grid-cols-2 gap-6 text-sm">
