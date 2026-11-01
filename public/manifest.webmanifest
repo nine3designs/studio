@@ -1,0 +1,30 @@
+{
+  "name": "Nine3 Studio",
+  "short_name": "Nine3 Studio",
+  "description": "Nine3 Designs studio workspace and client portals",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F5F1E8",
+  "theme_color": "#174B50",
+  "icons": [
+    {
+      "src": "/branding/n3-mark.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/branding/n3-mark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/branding/n3-mark.png",
+      "sizes": "640x640",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
