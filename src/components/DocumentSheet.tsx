@@ -112,8 +112,8 @@ export function parseBlocks(body: string): Block[] {
     const ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
     if (ol) {
       const last = blocks[blocks.length - 1];
-      if (last?.t === "ol") last.items.push(ol[2]);
-      else blocks.push({ t: "ol", items: [ol[2]] });
+      if (last?.t === "ol") last.items.push(ol[1]);
+      else blocks.push({ t: "ol", items: [ol[1]] });
       continue;
     }
     const fieldLabel = stripEmoji((line.match(/^\s*\*\*(.+?):\s*\*\*\s*$/) ?? [])[1] ?? "").trim();
