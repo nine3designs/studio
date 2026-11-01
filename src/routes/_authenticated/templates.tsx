@@ -20,6 +20,7 @@ export const DOC_KINDS = [
   { value: "email", label: "Email" },
   { value: "brief", label: "Brief / questionnaire" },
   { value: "project", label: "Project template" },
+  { value: "reference", label: "Reference" },
 ];
 
 type Draft = { id?: string; kind: string; name: string; description: string; body: string; items: string };
