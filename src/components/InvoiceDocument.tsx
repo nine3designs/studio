@@ -1,4 +1,4 @@
-import { fmtDate, invoiceTotals, LOGO_URL, money, type LineItem } from "@/lib/format";
+import { fmtDate, invoiceTotals, LOGO_MARK_WHITE_URL, money, type LineItem } from "@/lib/format";
 
 export type InvoiceDoc = {
   number: string;
@@ -17,11 +17,12 @@ export function InvoiceDocument({ inv }: { inv: InvoiceDoc }) {
   const docLabel = isQuote ? "Quote" : "Invoice";
   return (
     <div className="print-area rounded-md border bg-card p-10 shadow-sm">
-      <div className="flex items-start justify-between gap-6 rounded-sm bg-primary-deep p-6">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="h-12" />
-        <div className="text-right text-primary-foreground">
-          <p className="text-xs uppercase tracking-[0.3em] text-gold">{docLabel}</p>
-          <p className="text-2xl font-light">{inv.number}</p>
+      <div className="relative overflow-hidden rounded-sm p-8 text-center text-white" style={{ background: "linear-gradient(105deg,#101f3a 0%,#1c2a3d 55%,#2b353f 100%)" }}>
+        <div className="absolute inset-0 opacity-[0.14]" style={{ backgroundImage: "repeating-linear-gradient(60deg, rgba(255,255,255,0.35) 0 1px, transparent 1px 16px)" }} />
+        <div className="relative">
+          <img src={LOGO_MARK_WHITE_URL} alt="Nine3 Designs" className="mx-auto h-20 w-20" />
+          <p className="mt-3 text-sm font-bold uppercase tracking-[0.35em]">Nine3 Designs</p>
+          <p className="mt-1 text-xs uppercase tracking-[0.3em] text-white/70">{docLabel} · {inv.number}</p>
         </div>
       </div>
       <div className="mt-8 grid grid-cols-2 gap-6 text-sm">
@@ -32,15 +33,16 @@ export function InvoiceDocument({ inv }: { inv: InvoiceDoc }) {
           {inv.client?.email && <p className="text-muted-foreground">{inv.client.email}</p>}
         </div>
         <div className="text-right">
-          <p><span className="text-muted-foreground">Issued:</span> {fmtDate(inv.issue_date)}</p>
-          <p><span className="text-muted-foreground">{isQuote ? "Valid until:" : "Due:"}</span> {fmtDate(inv.due_date)}</p>
+          <p><span className="text-muted-foreground">{isQuote ? "Quote date:" : "Date of invoice:"}</span> {fmtDate(inv.issue_date)}</p>
+          <p><span className="text-muted-foreground">{isQuote ? "Valid until:" : "Payment due:"}</span> {fmtDate(inv.due_date)}</p>
+          <p><span className="text-muted-foreground">Reference:</span> {inv.number}</p>
           <p className="capitalize"><span className="text-muted-foreground">Status:</span> {inv.status.replace("quote_", "quote ")}</p>
         </div>
       </div>
       <table className="mt-8 w-full text-sm">
         <thead>
           <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <th className="py-2">Description</th><th className="py-2 text-right">Qty</th><th className="py-2 text-right">Rate</th><th className="py-2 text-right">Amount</th>
+            <th className="py-2">Item description</th><th className="py-2 text-right">Qty</th><th className="py-2 text-right">Price</th><th className="py-2 text-right">Amount</th>
           </tr>
         </thead>
         <tbody>
@@ -54,14 +56,32 @@ export function InvoiceDocument({ inv }: { inv: InvoiceDoc }) {
           ))}
         </tbody>
       </table>
-      <div className="ml-auto mt-6 w-64 space-y-1 text-sm">
+      <div className="ml-auto mt-6 w-72 space-y-1 text-sm">
         <div className="flex justify-between"><span>Subtotal</span><span>{money(t.subtotal)}</span></div>
         {Number(inv.tax_rate) > 0 && <div className="flex justify-between"><span>VAT ({inv.tax_rate}%)</span><span>{money(t.tax)}</span></div>}
-        <div className="flex justify-between border-t pt-2 text-lg font-semibold text-primary-deep"><span>Total</span><span>{money(t.total)}</span></div>
+        <div className="flex justify-between border-t pt-2 text-lg font-semibold text-primary-deep"><span>Grand total</span><span>{money(t.total)}</span></div>
+        {!isQuote && <div className="flex justify-between text-muted-foreground"><span>Deposit due (50%)</span><span>{money(t.total / 2)}</span></div>}
       </div>
+      {!isQuote && (
+        <div className="mt-8 grid grid-cols-2 gap-6 rounded-sm bg-muted/40 p-4 text-sm">
+          <div>
+            <p className="eyebrow mb-1">Payable to</p>
+            <p className="font-semibold">Nine3 Designs</p>
+            <p className="text-muted-foreground">e: hello@nine3designs.co.uk</p>
+          </div>
+          <div>
+            <p className="eyebrow mb-1">Bank details</p>
+            <p>Sort code: 04-03-33</p>
+            <p>Account number: 40426946</p>
+          </div>
+        </div>
+      )}
       {inv.notes && <p className="mt-8 whitespace-pre-wrap text-sm text-muted-foreground">{inv.notes}</p>}
-      <p className="mt-10 font-script text-lg font-semibold uppercase tracking-widest text-primary">{isQuote ? "Approval" : "Thank you"}</p>
-      <p className="text-xs text-muted-foreground">Nine3 Designs · nine3designs.co.uk</p>
+      <div className="mt-8 border-t pt-4 text-xs text-muted-foreground">
+        <p className="mb-1 font-semibold text-foreground">Terms and conditions</p>
+        <p>Payment due within 7 days of receipt of invoice. Overdue payments will incur statutory interest charged at 8% of the invoice total plus the Bank of England base rate and a £50.00 compensation charge.</p>
+      </div>
+      <p className="mt-8 text-center text-xs text-muted-foreground">Nine3 Designs · nine3designs.co.uk · e: hello@nine3designs.co.uk</p>
     </div>
   );
 }
