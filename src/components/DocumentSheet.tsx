@@ -70,8 +70,9 @@ export function applyFills(body: string, fills: Record<string, string>): string 
 
 // Inline markdown: **bold** and *italic*.
 function inline(text: string): ReactNode[] {
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*\s][^*]*\*)/g).filter(Boolean);
+  const parts = text.split(/(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*\s][^*]*\*)/g).filter(Boolean);
   return parts.map((p, i) => {
+    if (p.startsWith("***") && p.endsWith("***")) return <strong key={i}><em>{p.slice(3, -3)}</em></strong>;
     if (p.startsWith("**") && p.endsWith("**")) return <strong key={i}>{p.slice(2, -2)}</strong>;
     if (p.startsWith("*") && p.endsWith("*") && p.length > 2) return <em key={i}>{p.slice(1, -1)}</em>;
     return <Fragment key={i}>{p}</Fragment>;
@@ -89,9 +90,9 @@ type Block =
 export function parseBlocks(body: string): Block[] {
   const blocks: Block[] = [];
   for (const raw of body.split("\n")) {
-    const line = raw.replace(/\s+$/, "");
+    const line = raw.split("\\*").join("*").replace(/\s+$/, "");
     if (!line.trim() || /^\s*\*\*\s*$/.test(line)) continue;
-    const h = line.match(/^\s*(#{1,3})\s+(.*)$/);
+    const h = line.match(/^\s*(#{1,4})\s+(.*)$/);
     if (h) { blocks.push({ t: "h", level: h[1].length, text: stripEmoji(h[2]) }); continue; }
     if (/^\s*-{3,}\s*$/.test(line)) { blocks.push({ t: "hr" }); continue; }
     const tick = line.match(/^\s*🟢\s*(.*)$/);
