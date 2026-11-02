@@ -121,9 +121,15 @@ export function InvoiceDocument({ inv }: { inv: InvoiceDoc }) {
           <div className="mt-10 flex items-end justify-between gap-6">
             <div className="max-w-[62%]">
               <p className="text-[15px] font-bold">Terms and Conditions:</p>
-              <p className="mt-1 text-[14px] italic leading-relaxed">
-                Payment due within <span className="font-bold not-italic">7 days</span> of receipt of invoice. Overdue payments will incur statutory interest charged at 8% of the invoice total plus the Bank of England base rate and a £50.00 Compensation Charge
-              </p>
+              {isQuote ? (
+                <p className="mt-1 text-[14px] italic leading-relaxed">
+                  Quotes are valid for <span className="font-bold not-italic">14 days</span> from the date on this document. Once the quote is agreed an invoice will follow. For your order to proceed we require a <span className="font-bold not-italic">50% Deposit</span> with the remaining amount to be paid once final proofs are signed off. Your designs will be watermarked and full versions will not be sent until the balance has been received.
+                </p>
+              ) : (
+                <p className="mt-1 text-[14px] italic leading-relaxed">
+                  Payment due within <span className="font-bold not-italic">7 days</span> of receipt of invoice. Overdue payments will incur statutory interest charged at 8% of the invoice total plus the Bank of England base rate and a £50.00 Compensation Charge
+                </p>
+              )}
             </div>
             <img src={SIGNATURE_URL} alt="" className="mb-1 h-28 w-auto shrink-0" />
           </div>
