@@ -5,6 +5,7 @@ export const LOGO_URL_PETROL = "https://nine3designs.co.uk/assets/images/brandin
 export const LOGO_MARK_URL = "/branding/n3-mark.png";
 export const LOGO_MARK_WHITE_URL = "/branding/n3-mark-white.png";
 export const LOGO_WORDMARK_LIGHT_URL = "/branding/nine3-wordmark-light.png";
+export const LOGO_WORDMARK_PETROL_URL = "/branding/nine3-wordmark-petrol.png";
 
 export function money(n: number | string | null | undefined) {
   const v = Number(n ?? 0);

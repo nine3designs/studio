@@ -42,7 +42,7 @@ function MobileTabs({ tabs, value, onChange }: { tabs: { v: string; l: string }[
       {open && (
         <div className="mt-2 space-y-1 rounded-md border bg-card p-2">
           {tabs.map((t) => (
-            <button key={t.v} type="button" onClick={() => { onChange(t.v); setOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); }} className={`block w-full rounded px-3 py-2 text-left text-sm hover:bg-accent ${t.v === value ? "bg-accent font-semibold" : ""}`}>
+            <button key={t.v} type="button" onClick={() => { onChange(t.v); setOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); }} className={`block w-full rounded px-3 py-2 text-left text-sm hover:bg-accent ${t.v === value ? "portal-tab-active font-semibold" : ""}`}>
               {t.l}
             </button>
           ))}
@@ -64,6 +64,9 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         .confetti-piece { position: fixed; top: -6vh; width: 8px; height: 14px; border-radius: 2px; z-index: 60; animation: confettiFall linear forwards; }
         @keyframes confettiFall { 0% { transform: translateY(-4vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(108vh) rotate(720deg); opacity: 0; } }
         .portal-logo-load { animation: logoPulse 1.6s ease-in-out infinite; }
+        .portal-tab-active { background: #FFD520 !important; color: #0A2140 !important; }
+        .hero-away::after { content: none !important; }
+        .hero-away { --hero-glow: none; }
         @keyframes logoPulse { 0%,100% { opacity: .8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
       /* ---- sports premium theme (glass / dark) ---- */
         .sports { background: linear-gradient(180deg, #0A2140 0%, #081B33 45%, #050F1F 100%) !important; color: #EAF2FF; }
@@ -492,8 +495,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
 
   return (
     <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Outfit', ui-sans-serif, sans-serif" } as Any}>
-      {next && (
-        <section className="sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8" style={next.venue === "away" ? ({ "--hero-bg": `linear-gradient(160deg, ${p.client.away_kit?.primary || "#722F3B"} 0%, ${p.client.away_kit?.secondary || "#7EC8E3"} 135%)` } as Any) : undefined}>
+        <section className={`sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8 ${next.venue === "away" ? "hero-away" : ""}`} style={next.venue === "away" ? ({ "--hero-bg": "linear-gradient(160deg,#4A0F1D 0%,#6E2133 55%,#8E3247 100%)" } as Any) : undefined}>
           <div className="hero-bg-lines" aria-hidden="true" />
           <button type="button" onClick={() => { setTab("fixtures"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="absolute right-5 top-5 z-10 rounded-full bg-white/10 p-2 text-white/80 backdrop-blur transition hover:bg-white/20 hover:text-white" aria-label="Back to dashboard"><Home className="h-5 w-5" /></button>
           <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {fmtDate(next.match_date)}</p>
