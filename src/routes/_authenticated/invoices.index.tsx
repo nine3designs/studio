@@ -15,7 +15,7 @@ function Invoices() {
   const invoices = useRows("invoices", { select: "*, clients(name)", order: "issue_date" }).data ?? [];
   const save = useSave("invoices");
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<"all" | "invoices" | "quotes">("all");
+  const [filter, setFilter] = useState<"all" | "invoices" | "quotes" | "paid">("all");
 
   const isQuote = (s: string) => s.startsWith("quote");
   const sum = (pred: (s: string) => boolean) => invoices.filter((i) => !isQuote(effectiveStatus(i)) && pred(effectiveStatus(i))).reduce((s, i) => s + invoiceTotals(i.items, i.tax_rate).total, 0);
@@ -28,7 +28,7 @@ function Invoices() {
     navigate({ to: "/invoices/$id", params: { id: row.id } });
   }
 
-  const shown = invoices.filter((i) => filter === "all" || (filter === "quotes" ? isQuote(effectiveStatus(i)) : !isQuote(effectiveStatus(i))));
+  const shown = invoices.filter((i) => filter === "all" || (filter === "quotes" ? isQuote(effectiveStatus(i)) : filter === "paid" ? (!isQuote(effectiveStatus(i)) && effectiveStatus(i) === "paid") : (!isQuote(effectiveStatus(i)) && effectiveStatus(i) !== "paid")));
 
   return (
     <div>
@@ -39,7 +39,7 @@ function Invoices() {
         </div>
       } />
       <div className="mb-4 flex gap-2">
-        {(["all", "invoices", "quotes"] as const).map((f) => (
+        {(["all", "invoices", "quotes", "paid"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)} className={`rounded-full border px-4 py-1.5 text-xs font-semibold capitalize transition-colors ${filter === f ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/25 text-muted-foreground hover:border-primary hover:text-primary"}`}>{f}</button>
         ))}
       </div>
@@ -48,7 +48,7 @@ function Invoices() {
         <StatCard label="Awaiting payment" value={money(sum((s) => s === "sent"))} />
         <StatCard label="Overdue" value={money(sum((s) => s === "overdue"))} />
       </div>
-      {shown.length === 0 ? <Empty>{filter === "all" ? "Nothing here yet." : `No ${filter} yet.`}</Empty> : (
+      {shown.length === 0 ? <Empty>{filter === "all" ? "Nothing here yet." : filter === "paid" ? "Nothing paid yet." : `No ${filter} yet.`}</Empty> : (
         <div className="overflow-x-auto rounded-md border bg-card">
           <table className="w-full text-sm">
             <thead className="bg-cream text-left text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="p-3">Number</th><th className="p-3">Client</th><th className="p-3">Issued</th><th className="p-3">Due</th><th className="p-3 text-right">Total</th><th className="p-3">Status</th></tr></thead>
