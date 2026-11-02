@@ -389,7 +389,7 @@ function DocCard({ d, token }: { d: Any; token: string | null }) {
           <tr className="border-t font-semibold"><td className="py-2" colSpan={2}>Total</td><td className="py-2 text-right">{money(total)}</td></tr>
         </tbody></table>
       )}
-      {d.status === "accepted" ? <p className="mt-4 text-sm text-success">Accepted by {d.accepted_name} on {fmtDate(d.accepted_at)}</p> : d.status === "sent" && (
+      {d.status === "accepted" ? <p className="mt-4 text-sm text-success">Accepted by {d.accepted_name} on {fmtDate(d.accepted_at)}</p> : (d.kind === "proposal" || d.kind === "contract") && d.status === "sent" && (
         <div className="mt-5 flex flex-wrap items-end gap-2 border-t pt-4">
           <div className="flex-1 space-y-1"><p className="text-xs text-muted-foreground">Type your full name to accept and sign</p><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" /></div>
           <Button onClick={() => act({ type: "accept", id: d.id, name }, "Accepted, thank you!")}>Accept & sign</Button>
@@ -1042,70 +1042,106 @@ function BookCall({ token, compact }: { token: string | null; compact?: boolean 
   );
 }
 
-const Q_FIELDS: { key: string; label: string }[] = [
-  { key: "Business", label: "Tell us about your business (one or two lines)" },
-  { key: "Audience", label: "Who are your customers?" },
-  { key: "Feel", label: "What should people feel when they see your brand?" },
-  { key: "Colours", label: "Colours you love / want to avoid" },
-  { key: "Inspiration", label: "Brands or websites you admire" },
-  { key: "Extra", label: "Anything else we should know?" },
+const Q_SECTIONS: { title: string; hint?: string; fields: { key: string; label: string; short?: boolean }[] }[] = [
+  { title: "About You", fields: [
+    { key: "Name", label: "Name", short: true },
+    { key: "Business Name", label: "Business name", short: true },
+    { key: "Email", label: "Email", short: true },
+    { key: "Phone", label: "Phone", short: true },
+    { key: "Website", label: "Website", short: true },
+    { key: "Social Media", label: "Social media", short: true },
+  ] },
+  { title: "About Your Business", fields: [
+    { key: "What does your business do?", label: "What does your business do?" },
+    { key: "What makes your business unique?", label: "What makes your business unique?" },
+    { key: "Who is your ideal customer?", label: "Who is your ideal customer?" },
+    { key: "What are your business goals?", label: "What are your business goals?" },
+  ] },
+  { title: "Branding", fields: [
+    { key: "Describe your ideal style", label: "Describe your ideal style" },
+    { key: "Three words you'd like your brand to communicate", label: "Three words you'd like your brand to communicate", short: true },
+    { key: "Colours you love", label: "Colours you love", short: true },
+    { key: "Colours you'd like to avoid", label: "Colours you'd like to avoid", short: true },
+    { key: "Fonts you like", label: "Fonts you like", short: true },
+    { key: "Fonts you dislike", label: "Fonts you dislike", short: true },
+  ] },
+  { title: "Inspiration", hint: "Share any logos, Pinterest boards, Instagram accounts, websites or competitors that catch your eye.", fields: [
+    { key: "Inspiration", label: "Links and examples" },
+  ] },
+  { title: "Additional Information", fields: [
+    { key: "Anything else we should know?", label: "Anything else you'd like to tell me?" },
+  ] },
 ];
 
-function QuestionnaireCard({ p, token }: { p: Any; token: string | null }) {
+function QuestionnairePage({ p, token, onClose }: { p: Any; token: string | null; onClose: () => void }) {
   const act = useAct(token);
-  const [open, setOpen] = useState(false);
   const draftKey = `nine3-q-draft-${p.client?.id ?? "anon"}`;
-  const [v, setV] = useState<Record<string, string>>(() => {
-    try { return JSON.parse(localStorage.getItem(draftKey) ?? "{}"); } catch { return {}; }
-  });
-  const [savedTick, setSavedTick] = useState(false);
+  const [v, setV] = useState<Record<string, string>>(() => { try { return JSON.parse(localStorage.getItem(draftKey) ?? "{}"); } catch { return {}; } });
   const [busy, setBusy] = useState(false);
-  const done = (p.activity ?? []).some((a: Any) => /questionnaire/i.test(a.message ?? ""));
+  const total = Q_SECTIONS.reduce((s, x) => s + x.fields.length, 0);
+  const filled = Q_SECTIONS.flatMap((s) => s.fields).filter((f) => (v[f.key] ?? "").trim().length > 0).length;
+  const pct = Math.round((filled / total) * 100);
 
   useEffect(() => {
-    if (!open) return;
-    const t = setTimeout(() => {
-      if (Object.keys(v).length) {
-        try { localStorage.setItem(draftKey, JSON.stringify(v)); } catch { /* private mode */ }
-        setSavedTick(true);
-      }
-    }, 700);
+    const t = setTimeout(() => { if (Object.keys(v).length) { try { localStorage.setItem(draftKey, JSON.stringify(v)); } catch { /* private mode */ } } }, 700);
     return () => clearTimeout(t);
-  }, [v, open, draftKey]);
-
-  useEffect(() => {
-    if (!open) return;
-    const h = (e: BeforeUnloadEvent) => {
-      if (Object.values(v).some((x) => x?.trim())) { e.preventDefault(); e.returnValue = ""; }
-    };
-    window.addEventListener("beforeunload", h);
-    return () => window.removeEventListener("beforeunload", h);
-  }, [open, v]);
+  }, [v, draftKey]);
 
   return (
-    <Section title="Brand questionnaire">
-      {done ? (
-        <div className="flex items-start gap-3 text-sm"><ClipboardList className="mt-0.5 h-4 w-4 text-success" /><p>Questionnaire received · thank you! We'll use it to shape your concepts.</p></div>
-      ) : open ? (
-        <form className="space-y-3" onSubmit={async (e) => {
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
+      <div className="mx-auto max-w-2xl px-5 pb-24 pt-10">
+        <button type="button" onClick={onClose} className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"><ArrowLeft className="h-4 w-4" /> Back to portal</button>
+        <p className="eyebrow">Nine3 Designs</p>
+        <h1 className="mt-2 font-heading text-4xl font-bold tracking-tight text-primary-deep md:text-5xl" style={{ fontFamily: "'League Spartan', sans-serif" }}>Project questionnaire</h1>
+        <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">Please fill in the below in as much detail as you can · it helps me get to know you and your brand. Your answers save automatically as you type.</p>
+        <div className="mt-6 flex items-center gap-3">
+          <Progress value={pct} className="h-1.5 flex-1" />
+          <span className="text-xs font-medium text-muted-foreground">{filled}/{total}</span>
+        </div>
+        <form className="mt-10 space-y-10" onSubmit={async (e: Any) => {
           e.preventDefault(); setBusy(true);
           const ok = await act({ type: "questionnaire", answers: v }, "Questionnaire sent · thank you!");
-          if (ok) setOpen(false);
+          if (ok) onClose();
           setBusy(false);
         }}>
-          {Q_FIELDS.map((f) => (
-            <div key={f.key} className="space-y-1"><Label className="text-xs">{f.label}</Label><Textarea rows={2} value={v[f.key] ?? ""} onChange={(e) => setV({ ...v, [f.key]: e.target.value })} /></div>
+          {Q_SECTIONS.map((s) => (
+            <section key={s.title}>
+              <div className="mb-1 flex items-baseline gap-3"><span className="font-heading text-xl font-bold text-primary-deep" style={{ fontFamily: "'League Spartan', sans-serif" }}>{s.title}</span><span className="h-px flex-1 bg-border" /></div>
+              {s.hint && <p className="mb-4 text-xs text-muted-foreground">{s.hint}</p>}
+              <div className="grid gap-4 rounded-xl border bg-card p-5 sm:grid-cols-2">
+                {s.fields.map((f) => (
+                  <div key={f.key} className={`space-y-1.5 ${f.short ? "" : "sm:col-span-2"}`}>
+                    <Label className="text-[13px] font-medium">{f.label}</Label>
+                    {f.short
+                      ? <Input value={v[f.key] ?? ""} onChange={(e: Any) => setV({ ...v, [f.key]: e.target.value })} className="h-11 rounded-lg" />
+                      : <Textarea rows={3} value={v[f.key] ?? ""} onChange={(e: Any) => setV({ ...v, [f.key]: e.target.value })} className="rounded-lg" />}
+                  </div>
+                ))}
+              </div>
+            </section>
           ))}
-          <div className="flex items-center gap-2">
-            <Button type="submit" disabled={busy}>{busy ? "Sending…" : "Send answers"}</Button>
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Later</Button>
-            {savedTick && <span className="ml-auto flex items-center gap-1 text-xs text-success"><Check className="h-3.5 w-3.5" /> All changes saved</span>}
+          <div className="flex items-center gap-3">
+            <Button type="submit" size="lg" disabled={busy} className="rounded-full px-8">{busy ? "Sending…" : "Send questionnaire"}</Button>
+            <Button type="button" variant="ghost" onClick={onClose}>Save and come back later</Button>
           </div>
-          <p className="text-xs text-muted-foreground">Your answers save automatically as you type · come back any time.</p>
+          <p className="text-xs text-muted-foreground">Nothing is sent until you press Send · your answers are saved on this device as you type.</p>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function QuestionnaireCard({ p, token }: { p: Any; token: string | null }) {
+  const [open, setOpen] = useState(false);
+  const done = (p.activity ?? []).some((a: Any) => /questionnaire/i.test(a.message ?? ""));
+  return (
+    <Section title="Brand questionnaire">
+      {open && <QuestionnairePage p={p} token={token} onClose={() => setOpen(false)} />}
+      {done ? (
+        <div className="flex items-start gap-3 text-sm"><ClipboardList className="mt-0.5 h-4 w-4 text-success" /><p>Questionnaire received · thank you! We'll use it to shape your concepts.</p></div>
       ) : (
         <>
-          <p className="mb-4 text-sm text-muted-foreground">A few quick questions so we can nail your brief. Takes about five minutes.</p>
+          <p className="mb-4 text-sm text-muted-foreground">A few quick questions so we can nail your brief. Takes about ten minutes · your answers save as you type.</p>
           <Button size="sm" onClick={() => setOpen(true)}><ClipboardList className="h-4 w-4" /> Fill it in</Button>
         </>
       )}

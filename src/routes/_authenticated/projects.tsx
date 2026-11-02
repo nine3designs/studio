@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Empty, FormDialog, PageHeader, QuickForm, StatusBadge } from "@/components/common";
-import { logActivity, useRemove, useRows, useSave } from "@/lib/db";
+import { db, logActivity, useRemove, useRows, useSave } from "@/lib/db";
 import { fmtDate, money } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/projects")({
@@ -19,6 +19,7 @@ function Projects() {
   const clients = useRows("clients", { order: "name", asc: true }).data ?? [];
   const templates = useRows("templates", { eq: ["kind", "project"], order: "name", asc: true }).data ?? [];
   const save = useSave("projects", "Project saved");
+  const welcomeTpl = (useRows("templates", { eq: ["kind", "reference"], order: "name", asc: true }).data ?? []).find((t: Any) => t.name === "Welcome Guide");
   const saveMilestone = useSave("milestones");
   const remove = useRemove("projects");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,7 +47,15 @@ function Projects() {
     const items = (t.items ?? []) as string[];
     await Promise.all(items.map((title, i) => saveMilestone.mutateAsync({ project_id: proj.id, title, position: i })));
     if (proj.client_id) await logActivity(proj.client_id, `Project created from template: ${v.name}`);
+    await maybeWelcome(proj.client_id);
     setFromTpl(null);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function maybeWelcome(clientId: string | null | undefined) {
+    if (!clientId || !welcomeTpl) return;
+    const { error } = await db.from("proposals").insert({ kind: "reference", title: "Welcome Guide", client_id: clientId, body: welcomeTpl.body ?? "", items: [], status: "sent" });
+    if (error) console.error(error.message);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,7 +83,7 @@ function Projects() {
       <FormDialog title={editing?.id ? "Edit project" : "New project"} open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         {editing && <QuickForm fields={fields} initial={editing} onSubmit={async (v) => {
           const { clients: _c, milestones: _m, ...row } = v;
-          await save.mutateAsync(row); setEditing(null);
+          await save.mutateAsync(row); await maybeWelcome((row as Any).client_id ?? null); setEditing(null);
         }} />}
       </FormDialog>
       <FormDialog title="New project from template" open={!!fromTpl} onOpenChange={(o) => !o && setFromTpl(null)}>
@@ -147,3 +156,4 @@ function ProjectCard({ p, onEdit, onDelete, onDuplicate }: { p: any; onEdit: () 
     </div>
   );
 }
+
