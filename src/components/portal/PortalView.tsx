@@ -84,7 +84,7 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         .sports .text-muted-foreground { color: rgba(234,242,255,.55) !important; }
         .sports .eyebrow { color: #FFD520 !important; }
         .sports .border-dashed { border-color: rgba(255,255,255,.25) !important; }
-        .sports-hero { position: relative; overflow: hidden; background: linear-gradient(135deg, rgba(30,111,224,.5), rgba(10,53,110,.55)) !important; border: 1px solid rgba(255,255,255,.14) !important; border-radius: 1.5rem !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 24px 64px rgba(0,0,0,.4); }
+        .sports-hero { position: relative; overflow: hidden; background: var(--hero-bg, linear-gradient(135deg, rgba(30,111,224,.5), rgba(10,53,110,.55))) !important; border: 1px solid rgba(255,255,255,.14) !important; border-radius: 1.5rem !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 24px 64px rgba(0,0,0,.4); }
         .sports-hero::after { content: ""; position: absolute; right: -70px; top: -70px; width: 280px; height: 280px; background: radial-gradient(circle, rgba(255,213,32,.28), transparent 70%); border-radius: 50%; pointer-events: none; }
         .sports [role="progressbar"] { background: rgba(255,255,255,.14) !important; border-radius: 999px; }
         .sports [role="progressbar"] > * { background: #FFD520 !important; }
@@ -493,7 +493,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   return (
     <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Outfit', ui-sans-serif, sans-serif" } as Any}>
       {next && (
-        <section className="sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8" style={next.venue === "away" ? { background: "linear-gradient(160deg,#5E1B28 0%,#431220 55%,#2E0B14 100%)" } : undefined}>
+        <section className="sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8" style={next.venue === "away" ? ({ "--hero-bg": "linear-gradient(160deg,#5E1B28 0%,#431220 55%,#2E0B14 100%)" } as Any) : undefined}>
           <div className="hero-bg-lines" aria-hidden="true" />
           <button type="button" onClick={() => { setTab("fixtures"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="absolute right-5 top-5 z-10 rounded-full bg-white/10 p-2 text-white/80 backdrop-blur transition hover:bg-white/20 hover:text-white" aria-label="Back to dashboard"><Home className="h-5 w-5" /></button>
           <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {fmtDate(next.match_date)}</p>
@@ -652,7 +652,7 @@ function Kit({ label, k, away }: { label: string; k: Any; away?: Any }) {
           <div key={c} className="text-center"><div className="h-12 w-12 rounded-md border" style={{ background: kit[c] }} /><p className="mt-1 text-xs capitalize text-muted-foreground">{c}</p><p className="text-[10px] uppercase text-muted-foreground">{kit[c]}</p></div>
         ))}</div>
       )}
-      {kit?.notes && <p className="mt-3 text-sm text-muted-foreground">{kit.notes}</p>}
+      {kit?.notes && !/^[v]?#[0-9a-f]{3,8}/i.test(String(kit.notes)) && <p className="mt-3 text-sm text-muted-foreground">{kit.notes}</p>}
     </div>
   );
   return (
