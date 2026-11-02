@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, Receipt, Wallet, CalendarCheck, FileSignature, Tags, ClipboardList, LayoutTemplate, LogOut, Menu, Search,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { LOGO_URL } from "@/lib/format";
+import { LOGO_URL, LOGO_WORDMARK_LIGHT_URL } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -62,7 +62,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col md:flex-row">
       {/* Mobile top bar */}
       <div className="no-print flex items-center justify-between bg-sidebar p-4 text-sidebar-foreground md:hidden">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="h-16 w-auto max-w-[72vw] object-contain" />
+        <img src={LOGO_WORDMARK_LIGHT_URL} alt="Nine3 Designs" className="h-16 w-auto max-w-[72vw] object-contain" />
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="border-sidebar-accent bg-transparent text-sidebar-foreground hover:bg-sidebar-accent">
@@ -72,7 +72,7 @@ export function StudioShell({ children }: { children: ReactNode }) {
           <SheetContent side="left" className="h-full bg-sidebar text-sidebar-foreground">
             <SheetHeader>
               <SheetTitle className="text-left text-sidebar-foreground">
-                <img src={LOGO_URL} alt="Nine3 Designs" className="h-10" />
+                <img src={LOGO_WORDMARK_LIGHT_URL} alt="Nine3 Designs" className="h-8" />
               </SheetTitle>
             </SheetHeader>
             <div className="mt-2 px-2"><NavLinks onNavigate={() => setMenuOpen(false)} /></div>

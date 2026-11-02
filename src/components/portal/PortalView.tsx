@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Empty, StatusBadge } from "@/components/common";
 import { supabase } from "@/integrations/supabase/client";
 import { getPortal, portalAction } from "@/lib/portal.functions";
-import { effectiveStatus, fmtDate, invoiceTotals, LOGO_URL, LOGO_WORDMARK_LIGHT_URL, money, type LineItem } from "@/lib/format";
+import { effectiveStatus, fmtDate, invoiceTotals, LOGO_MARK_URL, LOGO_WORDMARK_LIGHT_URL, money, type LineItem } from "@/lib/format";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -138,7 +138,7 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         }
 
       `}</style>
-      <header className="relative overflow-hidden bg-primary-deep text-primary-foreground" style={tone === "sports" ? { background: "linear-gradient(180deg,#0E55AF,#0A4384)" } : undefined}>
+      <header className="relative overflow-hidden bg-primary-deep text-primary-foreground" style={{ background: "linear-gradient(135deg,#174B50 0%,#35636A 45%,#B7C2C4 130%)" }}>
         <div className="hero-bg-lines" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2.5 px-6 pb-7 pt-9 text-center md:pt-11">
           <img src={LOGO_WORDMARK_LIGHT_URL} alt="Nine3 Designs" className="h-16 w-auto md:h-20" style={{ filter: "drop-shadow(0 10px 26px rgba(0,0,0,.45))" }} />
@@ -474,7 +474,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const nowD = new Date();
   const curKey = `${nowD.getUTCFullYear()}-${String(nowD.getUTCMonth() + 1).padStart(2, "0")}`;
   const curPay = payMonths.find((m) => m.key === curKey);
-  const payOverdue = !!curPay && curPay.invoiced && !curPay.paid;
+  const payOverdue = !!curPay && !curPay.paid;
   const payPaid = !!curPay && curPay.paid;
   const next = upcoming[0];
   const nextKit = next ? (next.venue === "home" ? p.client.home_kit : p.client.away_kit) : null;
@@ -493,7 +493,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   return (
     <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Outfit', ui-sans-serif, sans-serif" } as Any}>
       {next && (
-        <section className="sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8" style={next.venue === "away" ? ({ "--hero-bg": "linear-gradient(160deg,#5E1B28 0%,#431220 55%,#2E0B14 100%)" } as Any) : undefined}>
+        <section className="sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8" style={next.venue === "away" ? ({ "--hero-bg": `linear-gradient(160deg, ${p.client.away_kit?.primary || "#722F3B"} 0%, ${p.client.away_kit?.secondary || "#7EC8E3"} 135%)` } as Any) : undefined}>
           <div className="hero-bg-lines" aria-hidden="true" />
           <button type="button" onClick={() => { setTab("fixtures"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="absolute right-5 top-5 z-10 rounded-full bg-white/10 p-2 text-white/80 backdrop-blur transition hover:bg-white/20 hover:text-white" aria-label="Back to dashboard"><Home className="h-5 w-5" /></button>
           <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {fmtDate(next.match_date)}</p>
@@ -900,7 +900,7 @@ function PortalLoader() {
   return (
     <div className="flex min-h-[62vh] flex-col items-center justify-center text-center">
       <div className="load-orb relative flex items-center justify-center rounded-full">
-        <img src={LOGO_URL} alt="Nine3 Designs" className="portal-logo-load h-16 w-auto md:h-20" style={{ filter: "drop-shadow(0 6px 18px rgba(23,75,80,.35))" }} />
+        <img src={LOGO_MARK_URL} alt="Nine3 Designs" className="portal-logo-load h-16 w-auto md:h-20" style={{ filter: "drop-shadow(0 6px 18px rgba(23,75,80,.35))" }} />
       </div>
       <p className="eyebrow mt-8">Preparing your portal</p>
       <div className="load-bar mt-4"><span /></div>

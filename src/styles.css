@@ -291,3 +291,6 @@ html, body { overflow-x: clip; }
   .doc-sheet { border: none !important; box-shadow: none !important; }
   .doc-tick, .doc-sheet header { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
+
+/* PWA safe areas (iPhone notch / home indicator) */
+body { padding-top: env(safe-area-inset-top); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); padding-bottom: env(safe-area-inset-bottom); }
