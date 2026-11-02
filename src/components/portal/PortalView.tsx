@@ -495,6 +495,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
 
   return (
     <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Outfit', ui-sans-serif, sans-serif" } as Any}>
+      {next && (
         <section className={`sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8 ${next.venue === "away" ? "hero-away" : ""}`} style={next.venue === "away" ? ({ "--hero-bg": "linear-gradient(160deg,#4A0F1D 0%,#6E2133 55%,#8E3247 100%)" } as Any) : undefined}>
           <div className="hero-bg-lines" aria-hidden="true" />
           <button type="button" onClick={() => { setTab("fixtures"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="absolute right-5 top-5 z-10 rounded-full bg-white/10 p-2 text-white/80 backdrop-blur transition hover:bg-white/20 hover:text-white" aria-label="Back to dashboard"><Home className="h-5 w-5" /></button>
