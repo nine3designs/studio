@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/common";
 import { nav as allNav } from "@/components/StudioShell";
 import { openFile, uploadFile, useRows, useSave } from "@/lib/db";
-import { effectiveStatus, fmtDate, invoiceTotals, money, portalLink } from "@/lib/format";
+import { effectiveStatus, fmtDate, invoiceTotals, money, portalLinkFor } from "@/lib/format";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -93,7 +93,7 @@ function Dashboard() {
             </div>
             <div className="flex flex-col gap-2 md:ml-auto" onClick={(e) => e.stopPropagation()}>
               <Link to="/tasks" className="rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-center text-sm font-semibold backdrop-blur transition-colors hover:bg-white/20">Graphics to-do ({tasks.filter((t) => t.status !== "done" && t.client_id === next.client_id).length})</Link>
-              {nextClient.portal_token && <a href={portalLink(nextClient.portal_token)} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-[#F5F1E8] px-5 py-2.5 text-sm font-semibold text-[#174B50] shadow-lg transition-transform hover:scale-[1.03]">Open portal <ExternalLink className="h-4 w-4" /></a>}
+              {nextClient.portal_token && <a href={portalLinkFor(nextClient)} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-[#F5F1E8] px-5 py-2.5 text-sm font-semibold text-[#174B50] shadow-lg transition-transform hover:scale-[1.03]">Open portal <ExternalLink className="h-4 w-4" /></a>}
             </div>
           </div>
           <div className="relative mt-4 flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
@@ -129,7 +129,7 @@ function Dashboard() {
                 <div key={c.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/15 bg-white/10 p-2.5">
                   <span className="min-w-0 truncate text-sm font-medium text-white">{c.name}</span>
                   <div className="flex shrink-0 gap-1.5">
-                    {c.portal_token && <a href={portalLink(c.portal_token)} target="_blank" rel="noreferrer" className="rounded-full bg-[#F5F1E8] px-3 py-1.5 text-xs font-semibold text-[#174B50] transition hover:bg-white">Portal</a>}
+                    {c.portal_token && <a href={portalLinkFor(c)} target="_blank" rel="noreferrer" className="rounded-full bg-[#F5F1E8] px-3 py-1.5 text-xs font-semibold text-[#174B50] transition hover:bg-white">Portal</a>}
                     <Link to="/tasks" className="rounded-full border border-white/25 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10">Tasks</Link>
                   </div>
                 </div>
@@ -313,7 +313,7 @@ function MatchdayDialog({ f, client, save, onClose }: { f: Any; client: Any; sav
           <Button type="submit" variant="outline"><Plus className="h-4 w-4" /> Add</Button>
         </form>
         <div className="mt-6 flex flex-wrap gap-2 border-t border-border/60 pt-5">
-          {client?.portal_token && <a href={portalLink(client.portal_token)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-deep">Open portal <ExternalLink className="h-4 w-4" /></a>}
+          {client?.portal_token && <a href={portalLinkFor(client)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-deep">Open portal <ExternalLink className="h-4 w-4" /></a>}
           <Button variant="ghost" onClick={onClose} className="text-muted-foreground hover:bg-accent hover:text-primary">Done</Button>
         </div>
       </div>

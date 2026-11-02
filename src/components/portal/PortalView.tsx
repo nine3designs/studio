@@ -454,14 +454,15 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const archive = p.deliverables.filter((d: Any) => d.kind === "completed" || d.kind === "deliverable" || (d.kind === "proof" && d.status === "approved"));
   const proofs = p.deliverables.filter((d: Any) => d.kind === "proof" && d.status !== "approved");
   const photos = p.deliverables.filter((d: Any) => d.kind === "photo");
+  const teamPhotos = p.deliverables.filter((d: Any) => d.kind === "teamphoto");
   const cfg = (p.client.portal_prefs ?? {}).monthly_config ?? null;
-  const payMonths: { key: string; label: string; paid: boolean }[] = [];
+  const payMonths: { key: string; label: string; paid: boolean; invoiced?: boolean }[] = [];
   if (cfg?.start && cfg?.count) {
     const [sy, sm] = String(cfg.start).split("-").map(Number);
     for (let i = 0; i < Number(cfg.count); i++) {
       const d = new Date(Date.UTC(sy, sm - 1 + i, 1));
       const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-      payMonths.push({ key, label: d.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }), paid: !!(p.client.portal_prefs?.monthly ?? {})[key]?.paid });
+      payMonths.push({ key, label: d.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }), paid: !!((p.client.portal_prefs?.monthly ?? {})[key] ?? {}).paid, invoiced: !!((p.client.portal_prefs?.monthly ?? {})[key] ?? {}).invoiced });
     }
   }
 
@@ -470,6 +471,11 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const [showAllFx, setShowAllFx] = useState(false);
   const [reqOpen, setReqOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
+  const nowD = new Date();
+  const curKey = `${nowD.getUTCFullYear()}-${String(nowD.getUTCMonth() + 1).padStart(2, "0")}`;
+  const curPay = payMonths.find((m) => m.key === curKey);
+  const payOverdue = !!curPay && curPay.invoiced && !curPay.paid;
+  const payPaid = !!curPay && curPay.paid;
   const next = upcoming[0];
   const nextKit = next ? (next.venue === "home" ? p.client.home_kit : p.client.away_kit) : null;
   const nextGfx = next ? ((next.graphics ?? []) as { name: string; done: boolean }[]) : [];
@@ -478,6 +484,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const tabs = [
     { v: "fixtures", l: "FIXTURES" },
     { v: "proofs", l: "PLAYER PHOTOS" },
+    { v: "teamphotos", l: "TEAM PHOTOS" },
     { v: "files", l: "GRAPHICS" },
     { v: "payments", l: "PAYMENTS" },
     { v: "todo", l: "TO-DO" },
@@ -486,7 +493,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   return (
     <div className="space-y-8 font-body" style={{ "--font-heading": "'League Spartan', 'Anton', sans-serif", fontFamily: "'Outfit', ui-sans-serif, sans-serif" } as Any}>
       {next && (
-        <section className="sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8">
+        <section className="sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8" style={next.venue === "away" ? { background: "linear-gradient(160deg,#5E1B28 0%,#431220 55%,#2E0B14 100%)" } : undefined}>
           <div className="hero-bg-lines" aria-hidden="true" />
           <button type="button" onClick={() => { setTab("fixtures"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="absolute right-5 top-5 z-10 rounded-full bg-white/10 p-2 text-white/80 backdrop-blur transition hover:bg-white/20 hover:text-white" aria-label="Back to dashboard"><Home className="h-5 w-5" /></button>
           <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {fmtDate(next.match_date)}</p>
@@ -514,6 +521,21 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
             </div>
           )}
         </section>
+      )}
+      {payOverdue && (
+        <button type="button" onClick={() => { setTab("payments"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="portal-fade flex w-full items-center justify-between gap-3 rounded-2xl border border-red-300/40 bg-red-500/15 px-5 py-4 text-left backdrop-blur transition hover:bg-red-500/25">
+          <span>
+            <span className="block text-sm font-bold uppercase tracking-widest text-red-200">Payment overdue</span>
+            <span className="block text-xs text-red-100/80">{curPay?.label} is past due · tap here to view payments</span>
+          </span>
+          <span className="rounded-full bg-red-400/90 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#2A0B0B]">View</span>
+        </button>
+      )}
+      {payPaid && curPay && (
+        <div className="portal-fade flex w-full items-center justify-between gap-3 rounded-2xl border border-emerald-300/30 bg-emerald-400/10 px-5 py-4 backdrop-blur">
+          <span className="text-sm font-semibold uppercase tracking-widest text-emerald-200">{curPay.label} · paid · thank you</span>
+          <Check className="h-5 w-5 text-emerald-300" />
+        </div>
       )}
 
       <Tabs value={tab} onValueChange={(v: string) => setTab(v)}>
@@ -556,6 +578,15 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
           <WhatNew p={p} token={token} />
           <TodoList p={p} token={token} />
           <NotesCard p={p} token={token} />
+        </TabsContent>
+
+        <TabsContent value="teamphotos" className="mt-0 space-y-8">
+          <Section title="Team photos">
+            <div className="space-y-4">
+              <UploadBox token={token} kind="teamphoto" label="Upload team photos (group shots, celebrations, behind the scenes)" />
+              <FileGrid files={teamPhotos} empty="No team photos uploaded yet." />
+            </div>
+          </Section>
         </TabsContent>
 
         <TabsContent value="proofs" className="mt-0 space-y-8">

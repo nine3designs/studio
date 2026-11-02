@@ -9,8 +9,15 @@ async function resolveClient(access: Access) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   if (access.token) {
     const { data } = await supabaseAdmin.from("clients").select("*").eq("portal_token", access.token).eq("access_method", "link").eq("portal_enabled", true).maybeSingle();
-    if (!data) throw new Error("This portal link is not valid.");
-    return { client: data, admin: supabaseAdmin };
+    if (data) return { client: data, admin: supabaseAdmin };
+    const slug = access.token.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const { data: candidates } = await supabaseAdmin.from("clients").select("*").eq("access_method", "link").eq("portal_enabled", true);
+    const named = (candidates ?? []).find((c: { portal_prefs?: { slug?: string | null }; company?: string | null; name?: string | null }) => {
+      const saved = String(c.portal_prefs?.slug ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      return saved ? saved === slug : false;
+    }) ?? (candidates ?? []).find((c: { company?: string | null; name?: string | null }) => String(c.company ?? c.name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "") === slug);
+    if (named) return { client: named, admin: supabaseAdmin };
+    throw new Error("This portal link is not valid.");
   }
   const auth = getRequestHeader("authorization");
   const jwt = auth?.startsWith("Bearer ") ? auth.slice(7) : null;

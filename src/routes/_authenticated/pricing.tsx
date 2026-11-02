@@ -36,9 +36,9 @@ function Pricing() {
     { name: "description", label: "Short description", type: "textarea" as const },
   ];
 
-  const packages = rows.filter((r: Any) => !String(r.name).startsWith("Extra ·"));
-  const extras = rows.filter((r: Any) => String(r.name).startsWith("Extra ·"));
-
+  const groupOf = (name: string) => /^extra ·/i.test(name) ? "Extras" : /^branding/i.test(name) ? "Branding" : /^logo/i.test(name) ? "Logo" : /^website/i.test(name) ? "Web" : /^social/i.test(name) ? "Social Media" : "Other";
+  const GROUPS = ["Branding", "Logo", "Web", "Social Media", "Other", "Extras"];
+  const grouped = GROUPS.map((g) => ({ title: g, list: rows.filter((r: Any) => groupOf(String(r.name)) === g) })).filter((g) => g.list.length > 0);
   const GlassCard = ({ r }: { r: Any }) => (
     <button
       type="button"
@@ -78,8 +78,7 @@ function Pricing() {
       </FormDialog>
       {rows.length === 0 ? <Empty>No packages yet.</Empty> : (
         <>
-          <Grid list={packages} title="Packages" />
-          <Grid list={extras} title="Extras" />
+          {grouped.map((g) => <Grid key={g.title} list={g.list} title={g.title} />)}
         </>
       )}
       {detail && (

@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Empty, PageHeader, StatusBadge } from "@/components/common";
 import { db, logActivity, openFile, uploadFile, useRemove, useRows, useSave } from "@/lib/db";
-import { fmtDate, portalLink, randomToken } from "@/lib/format";
+import { fmtDate, portalLink, portalLinkFor, randomToken } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/clients/$id")({
@@ -86,7 +86,7 @@ function PortalSettings({ client }: { client: any }) {
   const save = useSave("clients", "Saved");
   const [v, setV] = useState(client);
   useEffect(() => setV(client), [client]);
-  const link = v.access_method === "link" ? portalLink(v.portal_token) : `${typeof window !== "undefined" ? window.location.origin : ""}/portal`;
+  const link = v.access_method === "link" ? portalLinkFor(v) : `${typeof window !== "undefined" ? window.location.origin : ""}/portal`;
   const set = (k: string, val: unknown) => setV({ ...v, [k]: val });
 
   return (

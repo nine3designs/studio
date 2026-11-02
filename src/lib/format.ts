@@ -43,6 +43,12 @@ export function portalLink(token: string) {
   return `${origin}/portal/${token}`;
 }
 
+export function portalLinkFor(client: { portal_token?: string | null; portal_prefs?: { slug?: string } | null; company?: string | null; name?: string | null }) {
+  const slug = client.portal_prefs?.slug;
+  if (slug) return `/portal/${slug}`;
+  return portalLink(client.portal_token ?? "");
+}
+
 /** Groups non-draft invoices by issue month (YYYY-MM): what was billed, paid and is still owed. */
 export function monthlyPayments(
   invoices: { issue_date: string; status: string; items: LineItem[] | null; tax_rate: number | string }[],

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Empty, FormDialog, PageHeader, QuickForm, StatusBadge } from "@/components/common";
 import { useRows, useSave } from "@/lib/db";
-import { portalLink } from "@/lib/format";
+import { portalLinkFor } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/clients/")({
   head: () => ({ meta: [{ title: "Clients · Nine3 Studio" }] }),
@@ -25,6 +25,8 @@ function Clients() {
   const clients = useRows("clients", { order: "name", asc: true }).data ?? [];
   const save = useSave("clients", "Client added");
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState("active");
+  const shown = clients.filter((c) => filter === "all" ? true : c.status === filter);
   const navigate = useNavigate();
 
   return (
@@ -38,14 +40,20 @@ function Clients() {
           }} />
         </FormDialog>
       } />
-      {clients.length === 0 ? <Empty>No clients yet · add your first one.</Empty> : (
+      {clients.length === 0 ? <Empty>No clients yet · add your first one.</Empty>
+      : (<div>
+        <div className="zd-tabs mb-4 inline-flex rounded-full border border-border/60 bg-background/60 p-1">
+          {[["active", "Active"], ["archived", "Archived"], ["all", "All"]].map(([v, l]) => (
+            <button key={v as string} type="button" onClick={() => setFilter(v as string)} className={`zd-tab rounded-full px-4 py-1.5 text-xs font-semibold transition ${filter === v ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-primary"}`}>{l}</button>
+          ))}
+        </div>
         <div className="overflow-x-auto rounded-md border bg-card">
           <table className="w-full text-sm">
             <thead className="bg-cream text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr><th className="p-3">Client</th><th className="p-3">Portal</th><th className="p-3">Access</th><th className="p-3">Status</th><th className="p-3"></th></tr>
             </thead>
             <tbody>
-              {clients.map((c) => (
+              {shown.map((c) => (
                 <tr key={c.id} className="border-t">
                   <td className="p-3"><Link to="/clients/$id" params={{ id: c.id }} className="font-medium hover:text-primary-soft">{c.name}</Link><p className="text-xs text-muted-foreground">{c.company}</p></td>
                   <td className="p-3">{c.portal_type === "sports" ? "Sports weekly" : "Standard"}</td>
@@ -53,7 +61,7 @@ function Clients() {
                   <td className="p-3"><StatusBadge status={c.status} /></td>
                   <td className="p-3 text-right">
                     <Button size="sm" variant="ghost" onClick={() => {
-                      navigator.clipboard.writeText(c.access_method === "link" ? portalLink(c.portal_token) : `${window.location.origin}/portal`);
+                      navigator.clipboard.writeText(c.access_method === "link" ? portalLinkFor(c) : `${window.location.origin}/portal`);
                       toast.success("Portal link copied");
                     }}><Copy className="h-4 w-4" /> Copy link</Button>
                   </td>
@@ -62,7 +70,7 @@ function Clients() {
             </tbody>
           </table>
         </div>
-      )}
+      </div>)}
     </div>
   );
 }
