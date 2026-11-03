@@ -198,10 +198,10 @@ const PM_STYLES = `
 .pm .pm-col { background: var(--pm-soft); border-radius: 1.25rem; padding: .9rem; min-height: 120px; }
 .pm .pm-col.drop { outline: 2px dashed var(--pm-orange); outline-offset: 2px; }
 .pm .pm-card { background: #fff; border: 1px solid var(--pm-line); border-radius: .95rem; box-shadow: 0 3px 12px rgba(13,28,52,.05); }
-.pm .pm-btn { background: var(--pm-navy); color: #fff; border-radius: 999px; font-weight: 500; font-size: .875rem; }
-.pm .pm-btn:hover { background: var(--pm-navy2); }
-.pm .pm-btn-orange { background: var(--pm-orange); color: #3d2400; border-radius: 999px; font-weight: 500; font-size: .875rem; }
-.pm .pm-btn-orange:hover { background: var(--pm-orange-deep); color: #fff; }
+.pm .pm-btn { background: var(--pm-navy) !important; color: #fff !important; border-radius: 999px !important; font-weight: 500 !important; font-size: .875rem !important; }
+.pm .pm-btn:hover { background: var(--pm-navy2) !important; }
+.pm .pm-btn-orange { background: var(--pm-orange) !important; color: #3d2400 !important; border-radius: 999px !important; font-weight: 500 !important; font-size: .875rem !important; }
+.pm .pm-btn-orange:hover { background: var(--pm-orange-deep) !important; color: #fff !important; }
 .pm .pm-chip { display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; background: rgba(13,28,52,.06); color: var(--pm-navy); font-size: .7rem; font-weight: 600; padding: .2rem .6rem; }
 .pm .pm-chip.orange { background: rgba(245,154,43,.16); color: #a35803; }
 .pm input, .pm textarea, .pm select { font-family: 'Poppins', sans-serif; }
