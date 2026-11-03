@@ -226,7 +226,7 @@ function Dashboard({ p, stats, weeks, maxWeek, rate, unbilledMins, running, view
       <div className="pm-hero p-6 md:p-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-center">
           <div className="flex items-center gap-4">
-            {badge ? <img src={badge} alt="Advanced Assessment & Solutions" className="h-14 w-auto max-w-[240px] self-start rounded-xl bg-white/95 px-3.5 py-2.5 object-contain shadow-lg md:self-auto" /> : null}
+            {badge ? <img src={badge} alt="Advanced Assessment & Solutions" className="h-14 w-auto max-w-[260px] self-start rounded-lg px-2 py-1.5 md:self-auto" /> : null}
             <div>
               <p className="pm-eyebrow">Project portal</p>
               <h1 className="mt-1 text-3xl font-bold text-white md:text-4xl" style={{ fontFamily: "'Playfair Display', serif" }}>Welcome back, {first}</h1>
