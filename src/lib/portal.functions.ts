@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
+import type { LineItem } from "@/lib/format";
 
 type Access = { token?: string | null };
 
@@ -35,7 +36,8 @@ export const getPortal = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { client, admin } = await resolveClient(data);
     const cid = client.id;
-    const [onb, projects, files, invoices, proposals, fixtures, tasks, activity] = await Promise.all([
+    const grab = async (q: PromiseLike<Any>) => { try { const r = await q; return (r as Any).data ?? []; } catch { return []; } };
+    const [onb, projects, files, invoices, proposals, fixtures, tasks, activity, board, time] = await Promise.all([
       admin.from("onboarding_items").select("*").eq("client_id", cid).order("position"),
       admin.from("projects").select("id, name, description, status, due_date, milestones(id, title, due_date, done, position)").eq("client_id", cid).order("created_at", { ascending: false }),
       admin.from("deliverables").select("*").eq("client_id", cid).order("created_at", { ascending: false }),
@@ -44,6 +46,8 @@ export const getPortal = createServerFn({ method: "POST" })
       admin.from("sports_fixtures").select("*").eq("client_id", cid).order("match_date"),
       admin.from("tasks").select("id, title, notes, status, priority, due_date").eq("client_id", cid).order("created_at"),
       admin.from("activity_log").select("id, message, actor, created_at").eq("client_id", cid).order("created_at", { ascending: false }).limit(15),
+      grab(admin.from("board_cards").select("*").eq("client_id", cid).order("position").order("created_at")),
+      grab(admin.from("time_entries").select("*").eq("client_id", cid).order("created_at", { ascending: false })),
     ]);
     const deliverables = await Promise.all((files.data ?? []).map(async (f) => {
       let url: string | null = null;
@@ -75,6 +79,9 @@ export const getPortal = createServerFn({ method: "POST" })
       fixtures: fixtureRows,
       tasks: tasks.data ?? [],
       activity: activity.data ?? [],
+      board,
+      time,
+      rate: Number(((client as Any).portal_prefs ?? {})?.rate ?? 17),
     };
   });
 
@@ -94,7 +101,17 @@ type Action =
   | { type: "taskDelete"; id: string }
   | { type: "fixtureResult"; id: string; score: string }
   | { type: "clientNote"; text: string }
-  | { type: "deleteFile"; id: string };
+  | { type: "deleteFile"; id: string }
+  | { type: "cardAdd"; title: string; notes?: string; status?: string; actor?: string }
+  | { type: "cardEdit"; id: string; title?: string; notes?: string; status?: string; actor?: string }
+  | { type: "cardOrder"; status: string; ids: string[] }
+  | { type: "cardDelete"; id: string }
+  | { type: "timeStart"; note?: string; cardId?: string }
+  | { type: "timeStop"; id: string }
+  | { type: "timeAdd"; date: string; minutes: number; note?: string; cardId?: string; actor?: string }
+  | { type: "timeUpdate"; id: string; minutes: number; note?: string }
+  | { type: "timeDelete"; id: string }
+  | { type: "timeInvoice" };
 
 export const portalAction = createServerFn({ method: "POST" })
   .inputValidator((d: Access & { action: Action }) => d)
@@ -103,6 +120,9 @@ export const portalAction = createServerFn({ method: "POST" })
     const a = data.action;
     const cid = client.id;
     const log = (message: string) => admin.from("activity_log").insert({ client_id: cid, actor: "client", message });
+    const now = () => new Date().toISOString();
+    const CARD_STATUSES = ["todo", "doing", "done"];
+    const fmtMins = (m: number) => { const h = Math.floor(m / 60), r = m % 60; return h && r ? `${h}h ${r}m` : h ? `${h}h` : `${r}m`; };
 
     if (a.type === "onboarding") {
       const { data: row } = await admin.from("onboarding_items").update({ done: !!a.done, done_at: a.done ? new Date().toISOString() : null }).eq("id", a.id).eq("client_id", cid).select("title").maybeSingle();
@@ -242,6 +262,124 @@ export const portalAction = createServerFn({ method: "POST" })
       if (!row) throw new Error("File not found.");
       await log(`Client deleted file: ${row.title}`);
       return { ok: true };
+    }
+    if (a.type === "cardAdd") {
+      const title = String(a.title ?? "").trim();
+      if (!title) throw new Error("Give the task a title first.");
+      const status = CARD_STATUSES.includes(String(a.status)) ? String(a.status) : "todo";
+      const { data: last } = await admin.from("board_cards").select("position").eq("client_id", cid).eq("status", status).order("position", { ascending: false }).limit(1);
+      const by = a.actor === "Natalie" ? "Natalie" : "Sara";
+      const { error } = await admin.from("board_cards").insert({ client_id: cid, title: title.slice(0, 200), notes: a.notes ? String(a.notes).slice(0, 2000) : null, status, position: (Number((last as Any)?.[0]?.position) || 0) + 10, created_by: by });
+      if (error) throw new Error("The task board isn't ready yet · please check back soon.");
+      await admin.from("activity_log").insert({ client_id: cid, actor: by === "Natalie" ? "Natalie" : "client", message: `added a task: ${title.slice(0, 90)}` });
+      return { ok: true };
+    }
+    if (a.type === "cardEdit") {
+      const patch: Any = { updated_at: now() };
+      if (typeof a.title === "string") { if (!a.title.trim()) throw new Error("The title can't be empty."); patch.title = a.title.trim().slice(0, 200); }
+      if (typeof a.notes === "string") patch.notes = a.notes.slice(0, 2000) || null;
+      if (a.status) {
+        if (!CARD_STATUSES.includes(String(a.status))) throw new Error("Unknown column.");
+        patch.status = String(a.status);
+        const { data: last } = await admin.from("board_cards").select("position").eq("client_id", cid).eq("status", patch.status).neq("id", a.id).order("position", { ascending: false }).limit(1);
+        patch.position = (Number((last as Any)?.[0]?.position) || 0) + 10;
+      }
+      const { data: row } = await admin.from("board_cards").update(patch).eq("id", a.id).eq("client_id", cid).select("title,status").maybeSingle();
+      if (!row) throw new Error("Task not found.");
+      if (a.status) await admin.from("activity_log").insert({ client_id: cid, actor: a.actor === "Natalie" ? "Natalie" : "client", message: `moved "${String(row.title).slice(0, 60)}" to ${row.status === "todo" ? "To Do" : row.status === "doing" ? "In Progress" : "Done"}` });
+      return { ok: true };
+    }
+    if (a.type === "cardOrder") {
+      if (!CARD_STATUSES.includes(String(a.status))) throw new Error("Unknown column.");
+      const ids = Array.isArray(a.ids) ? a.ids.map(String).slice(0, 200) : [];
+      for (let i = 0; i < ids.length; i++) {
+        await admin.from("board_cards").update({ position: (i + 1) * 10, status: String(a.status), updated_at: now() }).eq("id", ids[i]).eq("client_id", cid);
+      }
+      return { ok: true };
+    }
+    if (a.type === "cardDelete") {
+      const { data: row } = await admin.from("board_cards").delete().eq("id", a.id).eq("client_id", cid).select("title").maybeSingle();
+      if (!row) throw new Error("Task not found.");
+      await admin.from("activity_log").insert({ client_id: cid, actor: a.actor === "Natalie" ? "Natalie" : "client", message: `removed a task` });
+      return { ok: true };
+    }
+    if (a.type === "timeStart") {
+      const { data: runningList } = await admin.from("time_entries").select("id, started_at").eq("client_id", cid).is("ended_at", null).limit(1);
+      const running = (runningList as Any)?.[0];
+      if (running) {
+        const ended = now();
+        const mins = Math.max(1, Math.round((Date.parse(ended) - Date.parse(running.started_at)) / 60000));
+        await admin.from("time_entries").update({ ended_at: ended, minutes: mins }).eq("id", running.id);
+      }
+      const { data: row, error } = await admin.from("time_entries").insert({ client_id: cid, card_id: a.cardId || null, started_at: now(), note: a.note ? String(a.note).slice(0, 300) : null, created_by: "Natalie" }).select("id").single();
+      if (error || !row) throw new Error("Time tracking isn't ready yet · please check back soon.");
+      await admin.from("activity_log").insert({ client_id: cid, actor: "Natalie", message: `started a work timer` });
+      return { ok: true, id: row.id };
+    }
+    if (a.type === "timeStop") {
+      const { data: row } = await admin.from("time_entries").select("id, started_at").eq("id", a.id).eq("client_id", cid).is("ended_at", null).maybeSingle();
+      if (!row) throw new Error("That timer isn't running.");
+      const ended = now();
+      const mins = Math.max(1, Math.round((Date.parse(ended) - Date.parse((row as Any).started_at)) / 60000));
+      await admin.from("time_entries").update({ ended_at: ended, minutes: mins }).eq("id", a.id).eq("client_id", cid);
+      await admin.from("activity_log").insert({ client_id: cid, actor: "Natalie", message: `logged ${fmtMins(mins)} of work` });
+      return { ok: true, minutes: mins };
+    }
+    if (a.type === "timeAdd") {
+      const mins = Math.round(Number(a.minutes));
+      if (!mins || mins <= 0) throw new Error("Enter how long you worked.");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(a.date))) throw new Error("Pick a date.");
+      const { error } = await admin.from("time_entries").insert({ client_id: cid, card_id: a.cardId || null, started_at: `${a.date}T09:00:00Z`, ended_at: `${a.date}T09:00:00Z`, minutes: mins, note: a.note ? String(a.note).slice(0, 300) : null, created_by: a.actor === "Natalie" ? "Natalie" : "Sara" });
+      if (error) throw new Error("Time tracking isn't ready yet · please check back soon.");
+      await admin.from("activity_log").insert({ client_id: cid, actor: a.actor === "Natalie" ? "Natalie" : "client", message: `logged ${fmtMins(mins)} on ${a.date}` });
+      return { ok: true };
+    }
+    if (a.type === "timeUpdate") {
+      const mins = Math.round(Number(a.minutes));
+      if (!mins || mins <= 0) throw new Error("Enter the minutes worked.");
+      const { error } = await admin.from("time_entries").update({ minutes: mins, note: a.note ? String(a.note).slice(0, 300) : null }).eq("id", a.id).eq("client_id", cid);
+      if (error) throw new Error("Could not update the entry.");
+      return { ok: true };
+    }
+    if (a.type === "timeDelete") {
+      const { error } = await admin.from("time_entries").delete().eq("id", a.id).eq("client_id", cid);
+      if (error) throw new Error("Could not remove the entry.");
+      return { ok: true };
+    }
+    if (a.type === "timeInvoice") {
+      const { data: rows } = await admin.from("time_entries").select("id, started_at, created_at, minutes, note").eq("client_id", cid).eq("billed", false).order("created_at");
+      const open = ((rows as Any[]) ?? []).filter((e) => Number(e.minutes) > 0);
+      if (open.length === 0) throw new Error("No unbilled hours to invoice.");
+      const prefs = ((client as Any).portal_prefs ?? {}) as Any;
+      const rate = Number(prefs.rate ?? 17);
+      const dayFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", day: "numeric", month: "long", year: "numeric" });
+      const byDay = new Map<string, { mins: number; notes: string[] }>();
+      for (const e of open) {
+        const iso = e.started_at ?? e.created_at;
+        const key = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date(iso));
+        const g = byDay.get(key) ?? { mins: 0, notes: [] };
+        g.mins += Number(e.minutes);
+        if (e.note && !g.notes.includes(e.note)) g.notes.push(e.note);
+        byDay.set(key, g);
+      }
+      const items: LineItem[] = [...byDay.entries()].sort((x, y) => x[0].localeCompare(y[0])).map(([key, g]) => ({
+        description: `Design & admin support · ${dayFmt.format(new Date(key + "T12:00:00Z"))}${g.notes.length ? ` · ${g.notes.join("; ").slice(0, 180)}` : ""}`,
+        quantity: Math.round((g.mins / 60) * 100) / 100,
+        rate,
+      }));
+      const totalHours = Math.round(open.reduce((s, e) => s + Number(e.minutes), 0) / 60 * 100) / 100;
+      const year = new Date().getFullYear();
+      const { data: nums } = await admin.from("invoices").select("number").like("number", `N3-${year}-%`);
+      let maxN = 0;
+      for (const r of (nums as Any[]) ?? []) { const m = /^N3-\d{4}-(\d+)$/.exec(String(r.number ?? "")); if (m) maxN = Math.max(maxN, parseInt(m[1], 10)); }
+      const number = `N3-${year}-${String(maxN + 1).padStart(3, "0")}`;
+      const today = new Date().toISOString().slice(0, 10);
+      const due = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+      const { data: inv, error } = await admin.from("invoices").insert({ client_id: cid, number, issue_date: today, due_date: due, status: "draft", items, tax_rate: 0, notes: `Generated from ${totalHours} logged hours at £${rate}/hour` }).select("id,number").single();
+      if (error || !inv) throw new Error("Could not create the invoice · please try again.");
+      await admin.from("time_entries").update({ billed: true, invoice_id: (inv as Any).id }).eq("client_id", cid).eq("billed", false);
+      await admin.from("activity_log").insert({ client_id: cid, actor: "Natalie", message: `created invoice ${number} (${fmtMins(Math.round(totalHours * 60))})` });
+      return { ok: true, number };
     }
     throw new Error("Unknown action");
   });

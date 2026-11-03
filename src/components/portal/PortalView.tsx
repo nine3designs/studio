@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Empty, StatusBadge } from "@/components/common";
 import { supabase } from "@/integrations/supabase/client";
 import { getPortal, portalAction } from "@/lib/portal.functions";
+import { PMPortal } from "@/components/portal/PMPortal";
 import { effectiveStatus, fmtDate, invoiceTotals, LOGO_MARK_URL, LOGO_WORDMARK_LIGHT_URL, money, type LineItem } from "@/lib/format";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,13 +20,13 @@ type Any = any;
 
 export function PortalView({ token }: { token: string | null }) {
   const fetchPortal = useServerFn(getPortal);
-  const q = useQuery({ queryKey: ["portal", token], queryFn: () => fetchPortal({ data: { token } }), retry: false });
+  const q = useQuery({ queryKey: ["portal", token], queryFn: () => fetchPortal({ data: { token } }), retry: false, refetchInterval: 30000, refetchOnWindowFocus: true });
   if (q.isLoading) return <Shell><PortalLoader /></Shell>;
   if (q.error) return <Shell><Empty>{(q.error as Error).message}</Empty></Shell>;
   const p = q.data!;
   return (
-    <Shell name={p.client.company || p.client.name} tone={p.client.portal_type === "sports" ? "sports" : undefined}>
-      {p.client.portal_type === "sports" ? <SportsPortal p={p} token={token} /> : <StandardPortal p={p} token={token} />}
+    <Shell name={p.client.company || p.client.name} tone={p.client.portal_type === "sports" ? "sports" : p.client.portal_type === "pm" ? "pm" : undefined}>
+      {p.client.portal_type === "sports" ? <SportsPortal p={p} token={token} /> : p.client.portal_type === "pm" ? <PMPortal p={p} token={token} /> : <StandardPortal p={p} token={token} />}
     </Shell>
   );
 }
@@ -52,9 +53,9 @@ function MobileTabs({ tabs, value, onChange }: { tabs: { v: string; l: string }[
   );
 }
 
-function Shell({ children, name, tone }: { children: ReactNode; name?: string; tone?: "sports" }) {
+function Shell({ children, name, tone }: { children: ReactNode; name?: string; tone?: "sports" | "pm" }) {
   return (
-    <div className={`min-h-screen bg-background${tone === "sports" ? " sports" : ""}`}>
+    <div className={`min-h-screen bg-background${tone === "sports" ? " sports" : ""}${tone === "pm" ? " pm" : ""}`}>
       <style>{`
         .portal-fade { animation: portalFade .45s ease both; }
         @keyframes portalFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -141,14 +142,14 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
         }
 
       `}</style>
-      <header className="relative overflow-hidden bg-primary-deep text-primary-foreground" style={{ background: "linear-gradient(135deg,#174B50 0%,#35636A 45%,#B7C2C4 130%)" }}>
+      <header className="relative overflow-hidden bg-primary-deep text-primary-foreground" style={{ background: tone === "pm" ? "linear-gradient(135deg,#0d1c34 0%,#1e3050 55%,#2f3844 130%)" : "linear-gradient(135deg,#174B50 0%,#35636A 45%,#B7C2C4 130%)" }}>
         <div className="hero-bg-lines" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2.5 px-6 pb-7 pt-9 text-center md:pt-11">
           <img src={LOGO_WORDMARK_LIGHT_URL} alt="Nine3 Designs" className="h-16 w-auto md:h-20" style={{ filter: "drop-shadow(0 10px 26px rgba(0,0,0,.45))" }} />
           <div className="h-px w-28 rounded-full bg-gradient-to-r from-transparent via-white/45 to-transparent" />
           <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">Client Portal</p>
         </div>
-        {name && <div className="relative mx-auto max-w-5xl px-6 pb-8 text-center"><p className="text-sm opacity-70">Welcome back,</p><h1 className="font-heading text-4xl font-bold tracking-tight md:text-5xl" style={tone === "sports" ? { fontFamily: "'League Spartan', sans-serif", color: "#FFD520" } : undefined}>{name}</h1></div>}
+        {name && <div className="relative mx-auto max-w-5xl px-6 pb-8 text-center"><p className="text-sm opacity-70">Welcome back,</p><h1 className="font-heading text-4xl font-bold tracking-tight md:text-5xl" style={tone === "sports" ? { fontFamily: "'League Spartan', sans-serif", color: "#FFD520" } : tone === "pm" ? { fontFamily: "'Playfair Display', serif", color: "#fff" } : undefined}>{name}</h1></div>}
       </header>
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
       <footer className="pb-8 text-center text-xs text-muted-foreground/80">
