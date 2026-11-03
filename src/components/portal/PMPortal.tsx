@@ -190,6 +190,7 @@ const PM_STYLES = `
 .pm { color: var(--pm-ink); font-family: 'Poppins', sans-serif; }
 .pm h1, .pm h2, .pm h3 { font-family: 'Playfair Display', serif; color: var(--pm-navy); }
 .pm .pm-hero { background: linear-gradient(135deg, #0d1c34 0%, #1e3050 62%, #2f3844 130%); border-radius: 1.4rem; color: #fff; box-shadow: 0 18px 44px rgba(13,28,52,.28); }
+.pm .pm-hero h1, .pm .pm-hero h2, .pm .pm-hero h3 { color: #fff; }
 .pm .pm-eyebrow { color: var(--pm-orange); font-size: .65rem; font-weight: 600; letter-spacing: .35em; text-transform: uppercase; }
 .pm .pm-tile { background: #fff; border: 1px solid var(--pm-line); border-radius: 1.25rem; box-shadow: 0 6px 20px rgba(13,28,52,.05); }
 .pm .pm-tile-icon { width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; border-radius: .9rem; background: rgba(245,154,43,.12); color: var(--pm-orange-deep); flex: none; }
