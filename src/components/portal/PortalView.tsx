@@ -54,6 +54,8 @@ function MobileTabs({ tabs, value, onChange }: { tabs: { v: string; l: string }[
 }
 
 function Shell({ children, name, tone }: { children: ReactNode; name?: string; tone?: "sports" | "pm" }) {
+  const saraHost = typeof window !== "undefined" && /(^|\.)advancedassessmentandsolutions\.co\.uk$/i.test(window.location.hostname);
+  const saraBadge = saraHost ? "/branding/sara-logo.png" : null;
   return (
     <div className={`min-h-screen bg-background${tone === "sports" ? " sports" : ""}${tone === "pm" ? " pm" : ""}`}>
       <style>{`
@@ -145,7 +147,7 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
       <header className="relative overflow-hidden bg-primary-deep text-primary-foreground" style={{ background: tone === "pm" ? "linear-gradient(135deg,#0d1c34 0%,#1e3050 55%,#2f3844 130%)" : "linear-gradient(135deg,#174B50 0%,#35636A 45%,#B7C2C4 130%)" }}>
         <div className="hero-bg-lines" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2.5 px-6 pb-7 pt-9 text-center md:pt-11">
-          <img src={LOGO_WORDMARK_LIGHT_URL} alt="Nine3 Designs" className="h-16 w-auto md:h-20" style={{ filter: "drop-shadow(0 10px 26px rgba(0,0,0,.45))" }} />
+          {saraBadge ? <img src={saraBadge} alt="Advanced Assessment & Solutions" className="h-12 w-auto max-w-[300px] md:h-14" style={{ filter: "drop-shadow(0 10px 26px rgba(0,0,0,.45))" }} /> : <img src={LOGO_WORDMARK_LIGHT_URL} alt="Nine3 Designs" className="h-16 w-auto md:h-20" style={{ filter: "drop-shadow(0 10px 26px rgba(0,0,0,.45))" }} />}
           <div className="h-px w-28 rounded-full bg-gradient-to-r from-transparent via-white/45 to-transparent" />
           <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">Client Portal</p>
         </div>
@@ -153,7 +155,7 @@ function Shell({ children, name, tone }: { children: ReactNode; name?: string; t
       </header>
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
       <footer className="pb-8 text-center text-xs text-muted-foreground/80">
-        Powered by <a href="https://nine3designs.co.uk" target="_blank" rel="noreferrer" className="hover:text-primary">Nine3 Designs</a> · Your Vision. Our Design.
+        {saraHost ? <span>Advanced Assessment &amp; Solutions · Client Portal</span> : <span>Powered by <a href="https://nine3designs.co.uk" target="_blank" rel="noreferrer" className="hover:text-primary">Nine3 Designs</a> · Your Vision. Our Design.</span>}
       </footer>
     </div>
   );
