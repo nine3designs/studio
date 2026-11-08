@@ -321,10 +321,11 @@ function FileGrid({ files, empty = "No files yet." }: { files: Any[]; empty?: st
   );
 }
 
-function UploadBox({ token, kind, label }: { token: string | null; kind: string; label: string }) {
+function UploadBox({ token, kind, label, player, players }: { token: string | null; kind: string; label: string; player?: boolean; players?: string[] }) {
   const act = useAct(token);
   const [files, setFiles] = useState<FileList | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pname, setPname] = useState("");
   async function go(e: React.FormEvent) {
     e.preventDefault();
     if (!files?.length) return;
@@ -334,7 +335,8 @@ function UploadBox({ token, kind, label }: { token: string | null; kind: string;
       if (!r) break;
       const { error } = await supabase.storage.from("files").uploadToSignedUrl(r.path, r.uploadToken, file);
       if (error) { toast.error(error.message); break; }
-      await act({ type: "recordUpload", path: r.path, fileName: file.name, kind });
+      const playerTitle = kind === "photo" && pname.trim() ? pname.trim() : undefined;
+      await act({ type: "recordUpload", path: r.path, fileName: file.name, kind, title: playerTitle });
     }
     toast.success("Uploaded, thank you!");
     setFiles(null); (e.target as HTMLFormElement).reset();
@@ -352,6 +354,14 @@ function UploadBox({ token, kind, label }: { token: string | null; kind: string;
           <span className={`max-w-full truncate text-xs ${names ? "text-foreground" : "text-muted-foreground"}`}>{names || "No file chosen"}</span>
           <input type="file" multiple className="hidden" onChange={(e) => setFiles(e.target.files)} />
         </label>
+        {player && (
+          <div className="w-full space-y-1">
+            <Input value={pname} onChange={(e: Any) => setPname(e.target.value)} placeholder="Player's name · goes into their album" list={players && players.length ? "sps-player-options" : undefined} className="sm:max-w-xs" />
+            {players && players.length > 0 && (
+              <datalist id="sps-player-options">{players.map((n) => <option key={n} value={n} />)}</datalist>
+            )}
+          </div>
+        )}
       </div>
       <Button type="submit" disabled={busy || !files?.length}><Upload className="h-4 w-4" /> {busy ? "Uploading…" : "Upload"}</Button>
     </form>
@@ -450,6 +460,52 @@ function PhotoAlbums({ photos, empty }: { photos: Any[]; empty: string }) {
   );
 }
 
+function PhotoOrganiser({ photos, token }: { photos: Any[]; token: string | null }) {
+  const act = useAct(token);
+  const [open, setOpen] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [vals, setVals] = useState<Record<string, string>>({});
+  if (photos.length === 0) return null;
+  const playerNames = Array.from(new Set(photos.map((ph) => playerName(ph.title ?? "")).filter(Boolean)));
+  return (
+    <div className="rounded-xl border border-dashed p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium">Tidy up albums</p>
+          <p className="text-xs text-muted-foreground">Photo in the wrong place? Move it into a player's folder.</p>
+        </div>
+        <Button variant="outline" onClick={() => setOpen(!open)} className="shrink-0">{open ? "Done" : "Move photos"}</Button>
+      </div>
+      {open && (
+        <div className="mt-4 space-y-2">
+          {photos.map((ph) => (
+            <div key={ph.id} className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-2">
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-black/10">{ph.url ? <img src={ph.url} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center text-muted-foreground"><ImageIcon className="h-4 w-4" /></div>}</div>
+              <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{ph.title}</p>
+              <Input value={vals[ph.id] ?? ""} onChange={(e: Any) => setVals({ ...vals, [ph.id]: e.target.value })} placeholder="Player's name" list={playerNames.length ? "sps-move-options" : undefined} className="w-40 sm:w-52" />
+              <Button
+                variant="outline"
+                disabled={busyId === ph.id || !(vals[ph.id] ?? "").trim()}
+                onClick={async () => {
+                  setBusyId(ph.id);
+                  const name = (vals[ph.id] ?? "").trim();
+                  const ok = await act({ type: "photoMove", id: ph.id, player: name }, `Filed into ${name}'s album`);
+                  setBusyId(null);
+                  if (ok) setVals({ ...vals, [ph.id]: "" });
+                }}
+              >
+                {busyId === ph.id ? "Moving…" : "Move"}
+              </Button>
+            </div>
+          ))}
+          {playerNames.length > 0 && (
+            <datalist id="sps-move-options">{playerNames.map((n) => <option key={n} value={n} />)}</datalist>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 /* ---------------- Sports weekly portal ---------------- */
 function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const today = new Date().toISOString().slice(0, 10);
@@ -460,6 +516,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const archive = p.deliverables.filter((d: Any) => d.kind === "completed" || d.kind === "deliverable" || (d.kind === "proof" && d.status === "approved"));
   const proofs = p.deliverables.filter((d: Any) => d.kind === "proof" && d.status !== "approved");
   const photos = p.deliverables.filter((d: Any) => d.kind === "photo");
+  const players = Array.from(new Set(photos.map((ph: Any) => playerName(ph.title ?? "")).filter(Boolean))) as string[];
   const teamPhotos = p.deliverables.filter((d: Any) => d.kind === "teamphoto");
   const cfg = (p.client.portal_prefs ?? {}).monthly_config ?? null;
   const payMonths: { key: string; label: string; paid: boolean; invoiced?: boolean }[] = [];
@@ -477,6 +534,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const [showAllFx, setShowAllFx] = useState(false);
   const [reqOpen, setReqOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
+  const [pickFx, setPickFx] = useState(false);
   const nowD = new Date();
   const curKey = `${nowD.getUTCFullYear()}-${String(nowD.getUTCMonth() + 1).padStart(2, "0")}`;
   const curPay = payMonths.find((m) => m.key === curKey);
@@ -544,6 +602,35 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
         </div>
       )}
 
+      {pickFx && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center" onClick={() => setPickFx(false)}>
+          <div className="fx-modal max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-white/10 bg-[#0A1E38]/95 p-6 shadow-2xl backdrop-blur-xl md:rounded-2xl" onClick={(e: Any) => e.stopPropagation()}>
+            <p className="eyebrow" style={{ color: "#FFD520" }}>Pick a fixture</p>
+            <h3 className="mt-1 font-heading text-2xl font-bold tracking-tight text-white">Add team sheet info</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Choose any upcoming match — team sheets are not limited to the next fixture.</p>
+            <ul className="mt-4 space-y-2">
+              {upcoming.map((f: Any) => {
+                const pd = new Date(`${f.match_date}T00:00:00`);
+                return (
+                  <li key={f.id}>
+                    <button type="button" onClick={() => { setPickFx(false); setOpenFx(f); }} className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3 text-left transition hover:bg-white/[0.08]">
+                      <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg border border-white/10 bg-white/[0.06]">
+                        <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "#FFD520" }}>{pd.toLocaleDateString("en-GB", { month: "short" })}</span>
+                        <span className="font-heading text-base font-bold leading-none text-white">{pd.getDate()}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-white">{f.venue === "home" ? "vs" : "away at"} {f.opponent}</p>
+                        <p className="text-xs text-white/50">{f.competition || "Fixture"}</p>
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <Button variant="ghost" onClick={() => setPickFx(false)} className="mt-4 text-white/70 hover:bg-white/10 hover:text-white">Cancel</Button>
+          </div>
+        </div>
+      )}
       <Tabs value={tab} onValueChange={(v: string) => setTab(v)}>
         <MobileTabs tabs={tabs} value={tab} onChange={setTab} />
         <TabsList className="mb-8 hidden flex-wrap md:flex">
@@ -556,7 +643,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
               <p className="eyebrow mb-3">Quick actions</p>
               <div className="flex flex-col gap-2">
                 <Button variant="outline" onClick={() => setReqOpen(true)} className="h-14 justify-start rounded-xl text-base font-semibold uppercase tracking-wide"><Plus className="h-5 w-5" /> New graphic request</Button>
-                <Button variant="outline" onClick={() => next && setOpenFx(next)} disabled={!next} className="h-14 justify-start rounded-xl text-base font-semibold uppercase tracking-wide"><Plus className="h-5 w-5" /> Add team sheet</Button>
+                <Button variant="outline" onClick={() => (upcoming.length > 1 ? setPickFx(true) : next && setOpenFx(next))} disabled={!next} className="h-14 justify-start rounded-xl text-base font-semibold uppercase tracking-wide"><Plus className="h-5 w-5" /> Add team sheet</Button>
                 <Button variant="outline" onClick={() => setScoreOpen(true)} className="h-14 justify-start rounded-xl text-base font-semibold uppercase tracking-wide"><Plus className="h-5 w-5" /> Submit score</Button>
                 {!next && <p className="text-xs text-muted-foreground">No upcoming fixture yet · team sheets attach to a fixture.</p>}
               </div>
@@ -598,7 +685,8 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
         <TabsContent value="proofs" className="mt-0 space-y-8">
           <Section title="Player photos">
             <div className="space-y-4">
-              <UploadBox token={token} kind="photo" label="Upload player photos" />
+              <UploadBox token={token} kind="photo" label="Upload player photos" player players={players} />
+              <PhotoOrganiser photos={photos} token={token} />
               <PhotoAlbums photos={photos} empty="No player photos uploaded yet." />
             </div>
           </Section>
