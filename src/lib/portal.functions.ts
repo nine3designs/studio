@@ -100,6 +100,7 @@ type Action =
   | { type: "taskDone"; id: string; done: boolean }
   | { type: "taskDelete"; id: string }
   | { type: "fixtureResult"; id: string; score: string }
+  | { type: "photoMove"; id: string; player: string }
   | { type: "clientNote"; text: string }
   | { type: "deleteFile"; id: string }
   | { type: "cardAdd"; title: string; notes?: string; status?: string; actor?: string }
@@ -251,6 +252,15 @@ export const portalAction = createServerFn({ method: "POST" })
       await log(`Submitted the score (${score}) for the fixture on ${fx.match_date}`);
       return { ok: true };
     }
+    if (a.type === "photoMove") {
+      const player = String(a.player || "").trim().slice(0, 120);
+      if (!player) throw new Error("Type the player's name first.");
+      const { data: row } = await admin.from("deliverables").update({ title: player }).eq("id", a.id).eq("client_id", cid).eq("kind", "photo").select("title").maybeSingle();
+      if (!row) throw new Error("Photo not found.");
+      await log(`Filed a player photo into ${player}'s album`);
+      return { ok: true };
+    }
+
     if (a.type === "clientNote") {
       const { error } = await admin.from("clients").update({ notes: (a.text || "").slice(0, 5000) }).eq("id", cid);
       if (error) throw new Error("Could not save the notes.");
