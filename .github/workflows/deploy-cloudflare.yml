@@ -2,6 +2,10 @@ name: Deploy studio to Cloudflare
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
 
 jobs:
   deploy:
@@ -24,17 +28,24 @@ jobs:
           SUPABASE_URL: https://arakmsikdjguhyqtqbsm.supabase.co
           SUPABASE_PUBLISHABLE_KEY: sb_publishable_gzvw3Zf8VhfoLV0xzIzuPA_Q07tu8cp
 
+      - name: Show build output layout
+        run: |
+          ls -la .output 2>/dev/null || echo "no .output"
+          ls -la .output/server 2>/dev/null || true
+          ls -la .output/public 2>/dev/null | head -20 || true
+
       - name: Deploy to Cloudflare Workers
         run: |
-          if [ -f .output/wrangler.json ]; then
-            echo "Using nitro-generated wrangler config"
-            cd .output && npx wrangler deploy
-          elif [ -f .output/wrangler.toml ]; then
-            echo "Using nitro-generated wrangler.toml"
-            cd .output && npx wrangler deploy
+          if [ -f .output/server/index.mjs ]; then
+            echo "Deploying nitro cloudflare-module output via repo config"
+            npx wrangler deploy --config wrangler.jsonc
+          elif [ -f .output/_worker.js ]; then
+            echo "Deploying nitro cloudflare_pages-style output"
+            npx wrangler deploy --config wrangler-pages.jsonc
           else
-            echo "Using repo wrangler.jsonc"
-            npx wrangler deploy
+            echo "::error::Unknown build output layout"
+            find .output -maxdepth 2 -type f 2>/dev/null | head -50
+            exit 1
           fi
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
