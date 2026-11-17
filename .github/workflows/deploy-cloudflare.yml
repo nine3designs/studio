@@ -28,22 +28,16 @@ jobs:
           SUPABASE_URL: https://arakmsikdjguhyqtqbsm.supabase.co
           SUPABASE_PUBLISHABLE_KEY: sb_publishable_gzvw3Zf8VhfoLV0xzIzuPA_Q07tu8cp
 
-      - name: Show build output layout
-        run: |
-          ls -la .output 2>/dev/null || echo "no .output"
-          ls -la .output/server 2>/dev/null || true
-          ls -la .output/public 2>/dev/null | head -20 || true
-
       - name: Deploy to Cloudflare Workers
         run: |
           if [ -f .output/server/index.mjs ]; then
-            echo "Deploying nitro cloudflare-module output via repo config"
-            npx wrangler deploy --config wrangler.jsonc
-          elif [ -f .output/_worker.js ]; then
-            echo "Deploying nitro cloudflare_pages-style output"
-            npx wrangler deploy --config wrangler-pages.jsonc
+            npx wrangler deploy \
+              --name nine3-studio \
+              --routes "studio.nine3designs.co.uk/*" \
+              --var "SUPABASE_URL:https://arakmsikdjguhyqtqbsm.supabase.co" \
+              --var "SUPABASE_PUBLISHABLE_KEY:sb_publishable_gzvw3Zf8VhfoLV0xzIzuPA_Q07tu8cp"
           else
-            echo "::error::Unknown build output layout"
+            echo "::error::Expected .output/server/index.mjs not found"
             find .output -maxdepth 2 -type f 2>/dev/null | head -50
             exit 1
           fi
