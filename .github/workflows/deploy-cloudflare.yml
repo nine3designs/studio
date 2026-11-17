@@ -35,7 +35,8 @@ jobs:
               --name nine3-studio \
               --routes "studio.nine3designs.co.uk/*" \
               --var "SUPABASE_URL:https://arakmsikdjguhyqtqbsm.supabase.co" \
-              --var "SUPABASE_PUBLISHABLE_KEY:sb_publishable_gzvw3Zf8VhfoLV0xzIzuPA_Q07tu8cp"
+              --var "SUPABASE_PUBLISHABLE_KEY:sb_publishable_gzvw3Zf8VhfoLV0xzIzuPA_Q07tu8cp" \
+              --var "SUPABASE_SERVICE_ROLE_KEY:${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
           else
             echo "::error::Expected .output/server/index.mjs not found"
             find .output -maxdepth 2 -type f 2>/dev/null | head -50
