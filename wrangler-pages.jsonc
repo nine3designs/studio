@@ -1,0 +1,23 @@
+// Fallback config for nitro cloudflare_pages-style output (.output/_worker.js)
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nine3-studio",
+  "main": ".output/_worker.js",
+  "compatibility_date": "2026-11-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".output/public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    { "pattern": "studio.nine3designs.co.uk", "custom_domain": true }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "SUPABASE_URL": "https://arakmsikdjguhyqtqbsm.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_gzvw3Zf8VhfoLV0xzIzuPA_Q07tu8cp"
+  }
+}
