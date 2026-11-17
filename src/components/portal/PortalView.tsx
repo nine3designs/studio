@@ -321,6 +321,32 @@ function FileGrid({ files, empty = "No files yet." }: { files: Any[]; empty?: st
   );
 }
 
+async function compressImage(file: File): Promise<File> {
+  if (typeof document === "undefined") return file;
+  const isJpeg = /^image\/(jpeg|jpg|webp)$/i.test(file.type);
+  const isPng = /^image\/png$/i.test(file.type);
+  if ((!isJpeg && !isPng) || file.size < 400_000) return file;
+  try {
+    const img = await createImageBitmap(file);
+    const max = 2400;
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    if (scale === 1 && file.size < 1_200_000) return file;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const mime = isJpeg ? "image/jpeg" : "image/png";
+    const quality = isJpeg ? 0.86 : undefined;
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, mime, quality));
+    img.close?.();
+    if (!blob || blob.size >= file.size) return file;
+    const ext = isJpeg ? ".jpg" : ".png";
+    return new File([blob], file.name.replace(/\.\w+$/, "") + ext, { type: mime });
+  } catch {
+    return file;
+  }
+}
+
 function UploadBox({ token, kind, label, player, players }: { token: string | null; kind: string; label: string; player?: boolean; players?: string[] }) {
   const act = useAct(token);
   const [files, setFiles] = useState<FileList | null>(null);
@@ -331,9 +357,10 @@ function UploadBox({ token, kind, label, player, players }: { token: string | nu
     if (!files?.length) return;
     setBusy(true);
     for (const file of Array.from(files)) {
-      const r = (await act({ type: "uploadUrl", fileName: file.name })) as { path: string; uploadToken: string } | null;
+      const upload = await compressImage(file);
+      const r = (await act({ type: "uploadUrl", fileName: upload.name })) as { path: string; uploadToken: string } | null;
       if (!r) break;
-      const { error } = await supabase.storage.from("files").uploadToSignedUrl(r.path, r.uploadToken, file);
+      const { error } = await supabase.storage.from("files").uploadToSignedUrl(r.path, r.uploadToken, upload);
       if (error) { toast.error(error.message); break; }
       const playerTitle = kind === "photo" && pname.trim() ? pname.trim() : undefined;
       await act({ type: "recordUpload", path: r.path, fileName: file.name, kind, title: playerTitle });
