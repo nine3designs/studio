@@ -1,0 +1,20 @@
+// Cloudflare Workers config for the Nine3 studio portal (TanStack Start + Nitro cloudflare preset).
+// Nitro normally generates its own .output/wrangler.json at build time; this is a fallback.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nine3-studio",
+  "main": ".output/server/index.mjs",
+  "compatibility_date": "2026-11-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".output/public",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "SUPABASE_URL": "https://arakmsikdjguhyqtqbsm.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_gzvw3Zf8VhfoLV0xzIzuPA_Q07tu8cp"
+  }
+}
