@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Copy, ExternalLink, GitBranch, RefreshCw, Trash2, Upload } from "lucide-react";
+import { Copy, ExternalLink, GitBranch, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Empty, PageHeader, StatusBadge } from "@/components/common";
+import { FX_SLOTS, normalizeGraphics } from "@/lib/graphics";
 import { db, logActivity, openFile, uploadFile, useRemove, useRows, useSave } from "@/lib/db";
 import { fmtDate, portalLink, portalLinkFor, randomToken } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
@@ -257,7 +258,7 @@ function Files({ clientId }: { clientId: string }) {
 }
 
 type Kit = { primary?: string; secondary?: string; accent?: string; notes?: string };
-const DEFAULT_GRAPHICS = ["Matchday", "Starting lineup", "Half-time score", "Full-time result"];
+const DEFAULT_GRAPHICS = FX_SLOTS;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function Sports({ client }: { client: any }) {
@@ -273,8 +274,8 @@ function Sports({ client }: { client: any }) {
   async function uploadGraphic(f: any, i: number, file: File) {
     try {
       const path = await uploadFile(client.id, file);
-      const graphics = [...f.graphics];
-      graphics[i] = { ...graphics[i], done: true, path };
+      const graphics = normalizeGraphics(f.graphics);
+      graphics[i] = { ...graphics[i], done: true, path, fileName: file.name };
       await saveFx.mutateAsync({ id: f.id, graphics });
       logActivity(client.id, `Uploaded ${graphics[i].name} for ${f.opponent} (matchday)`);
       toast.success(`${graphics[i].name} uploaded \u00b7 live on the portal`);
@@ -328,10 +329,10 @@ function Sports({ client }: { client: any }) {
                   <button className="text-muted-foreground hover:text-destructive" onClick={() => removeFx.mutate(f.id)}><Trash2 className="h-4 w-4" /></button>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {(f.graphics as { name: string; done: boolean; path?: string }[]).map((g, i) => (
+                  {normalizeGraphics(f.graphics).map((g, i) => (
                     <span key={i} className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm ${g.done ? "border-success/40 bg-success/10" : "border-border bg-muted/40"}`}>
                       <input type="checkbox" className="accent-primary" checked={g.done} onChange={(e) => {
-                        const graphics = [...f.graphics]; graphics[i] = { ...g, done: e.target.checked };
+                        const graphics = normalizeGraphics(f.graphics); graphics[i] = { ...g, done: e.target.checked };
                         saveFx.mutate({ id: f.id, graphics });
                       }} />
                       {g.name}
@@ -339,6 +340,12 @@ function Sports({ client }: { client: any }) {
                         <Upload className="h-3.5 w-3.5" />
                         <input type="file" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadGraphic(f, i, file); e.target.value = ""; }} />
                       </label>
+                      {g.path && (
+                        <button className="rounded-full p-0.5 text-muted-foreground transition-colors hover:text-destructive" title="Remove this file from the slot"
+                          onClick={() => { const graphics = normalizeGraphics(f.graphics); graphics[i] = { name: g.name, done: false }; saveFx.mutate({ id: f.id, graphics }); }}>
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                       {g.path && (
                         <button className="rounded-full p-0.5 text-muted-foreground transition-colors hover:text-primary" title="Preview file"
                           onClick={async () => { try { const u = g.path!.startsWith("http") ? g.path! : await openFile(g.path!); if (u) window.open(u, "_blank"); } catch (err) { toast.error((err as Error).message); } }}>

@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import type { LineItem } from "@/lib/format";
+import { FX_SLOTS, normalizeGraphics } from "@/lib/graphics";
 
 type Access = { token?: string | null };
 
@@ -67,7 +68,7 @@ export const getPortal = createServerFn({ method: "POST" })
         const u: string | null = String(g.path).startsWith("http") ? g.path : (await admin.storage.from("files").createSignedUrl(g.path, 3600)).data?.signedUrl ?? null;
         return { ...g, url: u };
       }));
-      return { ...fx, graphics };
+      return { ...fx, graphics: normalizeGraphics(graphics) };
     }));
     return {
       client: { id: cid, name: client.name, company: client.company, portal_type: client.portal_type, home_kit: client.home_kit, away_kit: client.away_kit, monthly_fee: client.monthly_fee, notes: client.notes, portal_prefs: (client as Any).portal_prefs ?? null },
@@ -95,6 +96,7 @@ type Action =
   | { type: "questionnaire"; answers?: Record<string, string> }
   | { type: "favourite"; id: string; on: boolean }
   | { type: "fixtureSheet"; id: string; text?: string; path?: string; fileName?: string }
+  | { type: "fixtureGraphic"; id: string; slot: string; path: string; fileName?: string }
   | { type: "newRequest"; title: string; notes?: string }
   | { type: "taskAdd"; title: string }
   | { type: "taskDone"; id: string; done: boolean }
@@ -194,6 +196,21 @@ export const portalAction = createServerFn({ method: "POST" })
       if (a.on) list.add(a.id); else list.delete(a.id);
       const { error } = await admin.from("clients").update({ portal_prefs: { ...prefs, favourites: [...list] } }).eq("id", cid);
       if (error) throw new Error("Favourites aren't ready yet · please check back soon.");
+      return { ok: true };
+    }
+    if (a.type === "fixtureGraphic") {
+      const slot = FX_SLOTS.find((x) => x === a.slot);
+      if (!slot || slot === "Team sheet") throw new Error("Choose a valid graphic slot.");
+      const { data: fx } = await admin.from("sports_fixtures").select("id, match_date, opponent, graphics").eq("id", a.id).eq("client_id", cid).maybeSingle();
+      if (!fx) throw new Error("Fixture not found");
+      if (!a.path || !a.path.startsWith(`${cid}/client-`)) throw new Error("Invalid upload");
+      const gfx = normalizeGraphics(fx.graphics);
+      const entry: Any = { name: slot, done: true, path: a.path, fileName: (a.fileName || "graphic").slice(0, 200), by: "client" };
+      const i = gfx.findIndex((g: Any) => g.name === slot);
+      if (i >= 0) gfx[i] = { ...gfx[i], ...entry }; else gfx.push(entry);
+      const { error } = await admin.from("sports_fixtures").update({ graphics: gfx }).eq("id", fx.id).eq("client_id", cid);
+      if (error) throw new Error("Could not save the graphic.");
+      await log(`Uploaded ${slot} for the fixture on ${fx.match_date} (${fx.opponent})`);
       return { ok: true };
     }
     if (a.type === "fixtureSheet") {

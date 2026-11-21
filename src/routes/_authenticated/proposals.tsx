@@ -146,6 +146,7 @@ function Proposals() {
                 <td className="p-3"><StatusBadge status={r.status} /></td>
                 <td className="p-3 text-right">{money(invoiceTotals(r.items).total)}</td>
                 <td className="p-3"><div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" asChild><Link to="/documents/$id" params={{ id: r.id }}>Open & download</Link></Button>
                   {r.status === "draft" && <Button size="sm" variant="outline" onClick={() => send(r)}><Send className="h-3.5 w-3.5" /> Send</Button>}
                   {r.status !== "accepted" && <select className="h-8 rounded-md border border-input bg-transparent px-2 text-xs" value={r.status} onChange={(e) => save.mutate({ id: r.id, status: e.target.value })}><option value="draft">Draft</option><option value="sent">Sent</option><option value="declined">Declined</option></select>}
                   <button onClick={() => setD({ id: r.id, kind: r.kind, title: r.title, client_id: r.client_id, body: r.body ?? "", items: r.items ?? [], status: r.status })} className="text-muted-foreground hover:text-primary"><Pencil className="h-4 w-4" /></button>

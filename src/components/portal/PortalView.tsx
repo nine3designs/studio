@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, CalendarDays, Check, ChevronDown, ClipboardList, Download, FileText, Heart, HelpCircle, Image as ImageIcon, Menu, PartyPopper, Upload, X, Home, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, ChevronDown, Bell, ClipboardList, Download, FileText, Heart, HelpCircle, Image as ImageIcon, Menu, PartyPopper, Upload, X, Home, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getPortal, portalAction } from "@/lib/portal.functions";
 import { PMPortal } from "@/components/portal/PMPortal";
 import { effectiveStatus, fmtDate, invoiceTotals, LOGO_MARK_URL, LOGO_WORDMARK_LIGHT_URL, money, type LineItem } from "@/lib/format";
+import { FX_SLOTS, normalizeGraphics } from "@/lib/graphics";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -534,6 +535,52 @@ function PhotoOrganiser({ photos, token }: { photos: Any[]; token: string | null
   );
 }
 /* ---------------- Sports weekly portal ---------------- */
+function NotifBell({ p, dark, bare }: { p: Any; dark?: boolean; bare?: boolean }) {
+  const key = "nine3-bell-" + p.client.id;
+  const [seen, setSeen] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => { setSeen(Number(localStorage.getItem(key) || 0)); }, [key]);
+  if (seen === null) return null;
+  const items = (p.activity ?? []).filter((a: Any) => a.actor === "studio");
+  const fresh = items.filter((a: Any) => new Date(a.created_at).getTime() > seen);
+  const btnTone = bare
+    ? "rounded-full border bg-card p-2 text-primary-deep transition hover:bg-cream"
+    : "relative rounded-full bg-white/10 p-2 text-white/80 backdrop-blur transition hover:bg-white/20 hover:text-white";
+  return (
+    <div className={`relative z-20 ${bare ? "flex justify-end pr-1" : "absolute right-16 top-5"}`}>
+      <button type="button" onClick={() => setOpen(!open)} className={btnTone} aria-label="Notifications">
+        <Bell className="h-5 w-5" />
+        {fresh.length > 0 && (
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold" style={{ background: "#FFD520", color: "#0A1E38" }}>{fresh.length}</span>
+        )}
+      </button>
+      {open && (
+        <div className="fx-modal absolute right-0 top-12 z-50 max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-white/10 bg-[#0A1E38]/95 p-4 shadow-2xl backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-heading text-lg font-bold text-white">Notifications</p>
+            <button type="button" onClick={() => setOpen(false)} className="rounded-full p-1 text-white/60 hover:bg-white/10 hover:text-white" aria-label="Close"><X className="h-4 w-4" /></button>
+          </div>
+          {items.length === 0 ? <p className="mt-3 text-sm text-white/60">Nothing yet · updates will appear here.</p> : (
+            <>
+              <ul className="mt-3 space-y-2">
+                {(fresh.length ? fresh : items.slice(0, 8)).map((a: Any) => (
+                  <li key={a.id} className={`rounded-xl border px-3 py-2 text-sm ${fresh.length && new Date(a.created_at).getTime() > seen ? "border-[#FFD520]/40 bg-[#FFD520]/10 text-white" : "border-white/10 bg-white/[0.04] text-white/80"}`}>
+                    <p>{a.message}</p>
+                    <p className="mt-0.5 text-[11px] text-white/45">{fmtDate(a.created_at)}</p>
+                  </li>
+                ))}
+              </ul>
+              {fresh.length > 0 && (
+                <Button size="sm" variant="outline" onClick={() => { localStorage.setItem(key, String(Date.now())); setSeen(Date.now()); }} className="mt-3 w-full border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white">Mark all as read</Button>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SportsPortal({ p, token }: { p: Any; token: string | null }) {
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = p.fixtures.filter((f: Any) => f.match_date >= today);
@@ -587,6 +634,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
         <section className={`sports-hero portal-fade relative overflow-hidden rounded-2xl p-6 text-white md:p-8 ${next.venue === "away" ? "hero-away" : ""}`} style={next.venue === "away" ? ({ "--hero-bg": "linear-gradient(160deg,#4A0F1D 0%,#6E2133 55%,#8E3247 100%)" } as Any) : undefined}>
           <div className="hero-bg-lines" aria-hidden="true" />
           <button type="button" onClick={() => { setTab("fixtures"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="absolute right-5 top-5 z-10 rounded-full bg-white/10 p-2 text-white/80 backdrop-blur transition hover:bg-white/20 hover:text-white" aria-label="Back to dashboard"><Home className="h-5 w-5" /></button>
+          <NotifBell p={p} dark />
           <p className="eyebrow" style={{ color: "#FFD520" }}>Next match · {fmtDate(next.match_date)}</p>
           <div className="relative mt-2 flex items-center gap-4">
             {p.client.home_kit?.badge && <img src={p.client.home_kit.badge} alt="Team badge" className="h-14 w-14 rounded-xl bg-white/10 object-contain p-1 ring-1 ring-white/25 md:h-16 md:w-16" />}
@@ -629,6 +677,7 @@ function SportsPortal({ p, token }: { p: Any; token: string | null }) {
         </div>
       )}
 
+      {!next && <NotifBell p={p} bare />}
       {pickFx && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center" onClick={() => setPickFx(false)}>
           <div className="fx-modal max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-white/10 bg-[#0A1E38]/95 p-6 shadow-2xl backdrop-blur-xl md:rounded-2xl" onClick={(e: Any) => e.stopPropagation()}>
@@ -877,8 +926,58 @@ function FxModal({ f, token, onClose }: { f: Any; token: string | null; onClose:
           {sheet?.url && <a href={sheet.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-0.5 text-[10px] font-semibold text-success"><Download className="h-3 w-3" />Current team sheet</a>}
         </div>
         {f.notes && <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.05] p-3 text-xs text-white/70">{f.notes}</p>}
+
+        <div className="mt-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-white/60">Matchday graphics</p>
+          <p className="mt-1 text-xs text-muted-foreground">Upload or download each week\u2019s graphics here \u00b7 both the club and the studio use these slots.</p>
+          <ul className="mt-3 space-y-2">
+            {(normalizeGraphics(f.graphics) as Any[]).filter((x) => FX_SLOTS.includes(x.name)).map((x) => {
+              const isSheet = x.name === "Team sheet";
+              const hasFile = !!x.url;
+              const hasSomething = x.done || hasFile || !!x.text;
+              return (
+                <li key={x.name} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-white">{x.name}</p>
+                    <p className="text-[11px] text-white/50">
+                      {hasFile ? `Ready to download${x.by === "client" ? " \u00b7 added by you" : " \u00b7 from Nine3"}` : isSheet && x.text ? "Info added" : hasSomething ? "Marked ready" : "Waiting"}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {hasFile && (
+                      <a href={x.url} target="_blank" rel="noreferrer" onClick={(e: Any) => e.stopPropagation()} className="flex items-center gap-1 rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success transition-transform hover:scale-105">
+                        <Download className="h-3.5 w-3.5" /> Download
+                      </a>
+                    )}
+                    {isSheet ? (
+                      <span className="rounded-full bg-white/[0.08] px-3 py-1.5 text-xs font-semibold text-white/70">Add below</span>
+                    ) : (
+                      <label className="cursor-pointer">
+                        <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#0A2547] shadow-sm transition-transform hover:scale-105"><Upload className="h-3.5 w-3.5" /> {hasFile ? "Replace" : "Upload"}</span>
+                        <input type="file" className="hidden" onChange={async (e: Any) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = "";
+                          if (!file) return;
+                          setBusy(true);
+                          const r = (await act({ type: "uploadUrl", fileName: file.name })) as { path: string; uploadToken: string } | null;
+                          if (!r) { setBusy(false); return; }
+                          const { error } = await supabase.storage.from("files").uploadToSignedUrl(r.path, r.uploadToken, file);
+                          if (error) { toast.error(error.message); setBusy(false); return; }
+                          await act({ type: "fixtureGraphic", id: f.id, slot: x.name, path: r.path, fileName: file.name }, `${x.name} uploaded \u00b7 saved to this fixture`);
+                          setBusy(false);
+                        }} />
+                      </label>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {busy && <p className="mt-2 text-xs text-white/60">Working…</p>}
+        </div>
+
         <div className="mt-5 space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-white/60">Team sheet info</label>
+          <label className="text-xs font-semibold uppercase tracking-wider text-white/60">Team sheet \u00b7 squad list & notes</label>
           <Textarea rows={4} value={text} onChange={(e: Any) => setText(e.target.value)} placeholder="Squad list, formations, availability, kick-off notes…" className="fx-sheet-input" />
         </div>
         <label className="mt-4 flex cursor-pointer flex-wrap items-center gap-2">
