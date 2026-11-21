@@ -131,7 +131,7 @@ export function parseBlocks(body: string): Block[] {
   return blocks;
 }
 
-function Blocks({ blocks }: { blocks: Block[] }) {
+export function Blocks({ blocks }: { blocks: Block[] }) {
   return (
     <>
       {blocks.map((b, i) => {
